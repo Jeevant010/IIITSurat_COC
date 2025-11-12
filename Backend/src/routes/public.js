@@ -5,17 +5,33 @@ const { computeLeaderboard } = require('../utils/leaderboard');
 
 const router = express.Router();
 
-// Teams
+// Clans list
 router.get('/teams', async (req, res) => {
   try {
-    const teams = await Team.find().sort({ name: 1 });
-    res.json(teams);
+    const teams = await Team.find({}, { name: 1, logoUrl: 1, leader: 1, clanTag: 1, level: 1, warLeague: 1, seed: 1, group: 1, members: 1 })
+      .sort({ name: 1 }).lean();
+    const mapped = teams.map(t => ({
+      ...t,
+      memberCount: t.members?.length || 0
+    }));
+    res.json(mapped);
   } catch (e) {
-    res.status(500).json({ error: 'Failed to fetch teams' });
+    res.status(500).json({ error: 'Failed to fetch clans' });
   }
 });
 
-// Schedule (all matches)
+// Clan details
+router.get('/teams/:id', async (req, res) => {
+  try {
+    const t = await Team.findById(req.params.id).lean();
+    if (!t) return res.status(404).json({ error: 'Clan not found' });
+    res.json(t);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch clan' });
+  }
+});
+
+// Schedule (wars)
 router.get('/schedule', async (req, res) => {
   try {
     const matches = await Match.find()
@@ -43,7 +59,7 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
-// Bracket by rounds
+// Bracket by rounds (wars)
 router.get('/bracket', async (req, res) => {
   try {
     const bracketId = req.query.bracketId || 'main';
@@ -60,10 +76,13 @@ router.get('/bracket', async (req, res) => {
         _id: m._id,
         round: r,
         status: m.status,
+        warType: m.warType,
+        size: m.size,
+        attacksPerMember: m.attacksPerMember,
         scheduledAt: m.scheduledAt,
         homeTeam: m.homeTeam ? { _id: m.homeTeam._id, name: m.homeTeam.name } : null,
         awayTeam: m.awayTeam ? { _id: m.awayTeam._id, name: m.awayTeam.name } : null,
-        score: m.score
+        result: m.result
       });
     }
     const rounds = Array.from(roundsMap.entries())
