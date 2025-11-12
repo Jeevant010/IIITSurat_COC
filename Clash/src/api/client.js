@@ -24,19 +24,28 @@ async function request(path, { method = 'GET', body, admin = false } = {}) {
 }
 
 export const api = {
+  // Public
   getTeams: () => request('/teams'),
+  getTeam: (id) => request(`/teams/${id}`),
   getSchedule: () => request('/schedule'),
   getLeaderboard: () => request('/leaderboard'),
   getBracket: (bracketId = 'main') => request(`/bracket?bracketId=${encodeURIComponent(bracketId)}`),
 
-  // Admin
+  // Admin Clans
   createTeam: (data) => request('/teams', { method: 'POST', body: data, admin: true }),
   updateTeam: (id, data) => request(`/teams/${id}`, { method: 'PUT', body: data, admin: true }),
   deleteTeam: (id) => request(`/teams/${id}`, { method: 'DELETE', admin: true }),
 
+  // Admin Members
+  addMember: (teamId, data) => request(`/teams/${teamId}/members`, { method: 'POST', body: data, admin: true }),
+  updateMember: (teamId, memberId, data) => request(`/teams/${teamId}/members/${memberId}`, { method: 'PUT', body: data, admin: true }),
+  deleteMember: (teamId, memberId) => request(`/teams/${teamId}/members/${memberId}`, { method: 'DELETE', admin: true }),
+
+  // Admin Wars
   createMatch: (data) => request('/matches', { method: 'POST', body: data, admin: true }),
   updateMatch: (id, data) => request(`/matches/${id}`, { method: 'PUT', body: data, admin: true }),
   deleteMatch: (id) => request(`/matches/${id}`, { method: 'DELETE', admin: true }),
 
+  // Admin Bracket
   generateBracket: (data) => request('/bracket/generate', { method: 'POST', body: data, admin: true })
 };

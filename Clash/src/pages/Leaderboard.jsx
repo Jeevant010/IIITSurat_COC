@@ -23,7 +23,9 @@ export default function Leaderboard() {
         <table>
           <thead>
             <tr>
-              <th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>
+              <th>#</th><th>Clan</th><th>P</th><th>W</th><th>D</th><th>L</th>
+              <th>Stars+</th><th>Stars-</th><th>SDiff</th>
+              <th>Avg Dest%</th><th>Pts</th>
             </tr>
           </thead>
           <tbody>
@@ -35,9 +37,10 @@ export default function Leaderboard() {
                 <td>{r.wins}</td>
                 <td>{r.draws}</td>
                 <td>{r.losses}</td>
-                <td>{r.gf}</td>
-                <td>{r.ga}</td>
-                <td>{r.gd}</td>
+                <td>{r.starsFor}</td>
+                <td>{r.starsAgainst}</td>
+                <td>{r.starsDiff}</td>
+                <td>{r.avgDestFor}%</td>
                 <td><strong>{r.points}</strong></td>
               </tr>
             ))}

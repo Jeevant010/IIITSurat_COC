@@ -37,13 +37,15 @@ export default function Bracket() {
                 <div key={m._id} className={`match ${m.status}`}>
                   <div className="match-row">
                     <span>{m.homeTeam?.name || 'TBD'}</span>
-                    <strong>{m.score?.home ?? '-'}</strong>
+                    <strong>{m.result?.home?.stars ?? 0}⭐ • {m.result?.home?.destruction ?? 0}%</strong>
                   </div>
                   <div className="match-row">
                     <span>{m.awayTeam?.name || 'TBD'}</span>
-                    <strong>{m.score?.away ?? '-'}</strong>
+                    <strong>{m.result?.away?.stars ?? 0}⭐ • {m.result?.away?.destruction ?? 0}%</strong>
                   </div>
-                  <div className="match-foot">{new Date(m.scheduledAt).toLocaleString()}</div>
+                  <div className="match-foot">
+                    {new Date(m.scheduledAt).toLocaleString()} • {m.warType?.toUpperCase()} {m.size}v{m.size}
+                  </div>
                 </div>
               ))}
             </div>

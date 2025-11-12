@@ -26,21 +26,21 @@ export default function Schedule() {
 
   return (
     <div>
-      <h1>Schedule</h1>
+      <h1>War Schedule</h1>
       <div className="cards">
         {matches.map(m => (
           <div key={m._id} className={`card ${m.status}`}>
             <div className="card-title">
-              Round {m.round} • {fmt(m.scheduledAt)} • {m.bracketId}
+              Round {m.round} • {fmt(m.scheduledAt)} • {m.bracketId} • {m.warType?.toUpperCase()} {m.size}v{m.size}
             </div>
             <div className="card-body">
               <div className="match-row">
                 <span>{m.homeTeam?.name}</span>
-                <strong>{m.score?.home ?? '-'}</strong>
+                <strong>{m.result?.home?.stars ?? 0}⭐ • {m.result?.home?.destruction ?? 0}%</strong>
               </div>
               <div className="match-row">
                 <span>{m.awayTeam?.name}</span>
-                <strong>{m.score?.away ?? '-'}</strong>
+                <strong>{m.result?.away?.stars ?? 0}⭐ • {m.result?.away?.destruction ?? 0}%</strong>
               </div>
             </div>
             <div className="card-foot">{m.status.toUpperCase()}</div>
