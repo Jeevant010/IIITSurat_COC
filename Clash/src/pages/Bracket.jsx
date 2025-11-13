@@ -225,14 +225,14 @@ export default function Bracket() {
               <span className="coc-info-icon">⭐</span>
               <div className="coc-info-text">
                 <strong>Victory Conditions</strong>
-                <span>Most stars wins, destruction% as tiebreaker</span>
+                <span>Most stars wins, destruction percentage as tie breaker</span>
               </div>
             </div>
             <div className="coc-info-item">
               <span className="coc-info-icon">🕒</span>
               <div className="coc-info-text">
                 <strong>Match Duration</strong>
-                <span>24 hours preparation + 24 hours battle</span>
+                <span>15 minutes preparation + 30 minutes battle</span>
               </div>
             </div>
             <div className="coc-info-item">

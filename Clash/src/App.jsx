@@ -20,7 +20,7 @@ export default function App() {
             <div className="coc-brand-icon">⚔️</div>
             <div className="coc-brand-text">
               <span className="coc-brand-title">Clash Championship</span>
-              <span className="coc-brand-subtitle">Tournament Wars</span>
+              <span className="coc-brand-subtitle">Praksh Memorial Sports Tournament</span>
             </div>
           </Link>
 
@@ -127,7 +127,7 @@ export default function App() {
               <div className="coc-footer-icon">⚔️</div>
               <div className="coc-footer-text">
                 <strong>Praksh Memorial Sports Tournament</strong>
-                <span>Tournament Wars</span>
+                <span>Clash Of Clans Tournament</span>
               </div>
             </div>
             
