@@ -28,7 +28,7 @@ export default function App() {
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/bracket" element={<Bracket />} />
           <Route path="/admin" element={<Admin />} />
-          {/* Catch-all to avoid "No routes matched" warning in console */}
+          {/* Hard catch-all so RRD never logs "No routes matched" */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

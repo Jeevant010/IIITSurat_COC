@@ -81,7 +81,7 @@ export default function Leaderboard() {
             </div>
             <div className="lb-card-prog">
               <div className="muted">Avg Dest%</div>
-              <ProgressBar value={r.avgDestFor} max={100} color="linear-gradient(90deg, #ffcf4a, #ffd166)" bg="rgba(255,255,255,.16)" height={10} />
+              <ProgressBar value={r.avgDestFor} max={100} color="linear-gradient(90deg, #ffd166, #ffc445)" bg="rgba(255,255,255,.18)" height={10} />
               <div className="muted tiny">Total {r.totalDestruction}% • Win {r.winRate}%</div>
             </div>
           </div>

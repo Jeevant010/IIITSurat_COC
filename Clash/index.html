@@ -3,11 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>Indominus Clash of Clans</title>
-    <meta name="theme-color" content="#0a0f23"/>
+    <title>Indominus Clash of Clans</title>
+    <meta name="theme-color" content="#081126"/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Direct-link rescue for HashRouter: turn /path into #/path BEFORE React loads -->
+    <script>
+      (function () {
+        try {
+          var hasHash = location.hash && location.hash.startsWith('#/');
+          var needsRedirect = !hasHash && location.pathname && location.pathname !== '/';
+          if (needsRedirect) {
+            var newUrl = location.origin + '/#' + location.pathname + location.search + location.hash;
+            location.replace(newUrl);
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
