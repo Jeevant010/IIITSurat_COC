@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 require('dotenv').config();
 
 const publicRoutes = require('./routes/public');
@@ -33,9 +34,19 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
-// Routes
+// API Routes
 app.use('/api', publicRoutes);
 app.use('/api', adminRoutes);
+
+// Optional: serve built frontend without vercel.json (set SERVE_FRONTEND=true)
+if (process.env.SERVE_FRONTEND === 'true') {
+  const distPath = path.resolve(__dirname, '../../frontend/dist');
+  app.use(express.static(distPath));
+  // Fallback for SPA routes (non-API)
+  app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // Start
 const port = process.env.PORT || 4000;

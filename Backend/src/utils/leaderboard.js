@@ -20,7 +20,10 @@ function computeLeaderboard(teams, matches) {
       avgDestFor: 0,
       avgStarsFor: 0,
       winRate: 0,
-      points: 0
+      points: 0,
+      // explicit totals (aliases for clarity)
+      totalStars: 0,
+      totalDestruction: 0
     });
   }
 
@@ -63,6 +66,8 @@ function computeLeaderboard(teams, matches) {
     r.avgDestFor = r.played ? +(r.destFor / r.played).toFixed(2) : 0;
     r.avgStarsFor = r.played ? +(r.starsFor / r.played).toFixed(2) : 0;
     r.winRate = r.played ? +((r.wins / r.played) * 100).toFixed(1) : 0;
+    r.totalStars = r.starsFor;
+    r.totalDestruction = +r.destFor.toFixed(2);
     return r;
   });
 

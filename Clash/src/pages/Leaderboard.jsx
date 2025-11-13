@@ -22,67 +22,70 @@ export default function Leaderboard() {
     <div>
       <div className="page-head">
         <h1>Standings</h1>
-        <div className="sub">Live leaderboard • Win=3 • Draw=1 • Loss=0</div>
+        <div className="sub">Win=3 • Draw=1 • Loss=0</div>
       </div>
 
-      <div className="panel table-panel">
-        <div className="table-legend">
-          <span>P</span><span>W</span><span>D</span><span>L</span>
-          <span>Stars±</span><span>Dest%</span><span>Pts</span>
+      {/* Desktop/table layout */}
+      <div className="panel lb-desktop">
+        <div className="table-wrap">
+          <table className="lb-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Clan</th>
+                <th>P</th><th>W</th><th>D</th><th>L</th>
+                <th>⭐ Total</th><th>⭐ Diff</th><th>Avg ⭐</th>
+                <th>Dest% Total</th><th>Dest% Avg</th>
+                <th>Win%</th>
+                <th>Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={r.teamId}>
+                  <td>{i + 1}</td>
+                  <td><Link to={`/teams/${r.teamId}`}>{r.name}</Link></td>
+                  <td>{r.played}</td><td>{r.wins}</td><td>{r.draws}</td><td>{r.losses}</td>
+                  <td>{r.totalStars}</td>
+                  <td>{r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff}</td>
+                  <td>{r.avgStarsFor}</td>
+                  <td>{r.totalDestruction}%</td>
+                  <td>{r.avgDestFor}%</td>
+                  <td>{r.winRate}%</td>
+                  <td><strong>{r.points}</strong></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="lb">
-          {rows.map((r, i) => (
-            <div key={r.teamId} className="lb-row">
-              <div className="lb-left">
-                <div className="rank">{i + 1}</div>
-                <Link className="clan" to={`/teams/${r.teamId}`}>{r.name}</Link>
-              </div>
+      </div>
 
-              <div className="lb-mid">
-                <div className="pill stat">{r.played}</div>
-                <div className="pill stat win">{r.wins}</div>
-                <div className="pill stat draw">{r.draws}</div>
-                <div className="pill stat loss">{r.losses}</div>
-
-                <div className="stars">
-                  <span className="plus">{r.starsFor}</span>
-                  <span className="sep">/</span>
-                  <span className="minus">{r.starsAgainst}</span>
-                  <span className="diff">{r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff}</span>
-                </div>
-
-                <div className="dest">
-                  <ProgressBar
-                    value={r.avgDestFor}
-                    max={100}
-                    color="linear-gradient(90deg, #22c55e, #60a5fa)"
-                    bg="rgba(255,255,255,.08)"
-                    height={10}
-                  />
-                  <div className="dest-label">
-                    <span className="muted">Avg</span> <strong>{r.avgDestFor}%</strong>
-                    <span className="muted dot">•</span>
-                    <span className="muted">Total</span> <strong>{r.destFor.toFixed(2)}%</strong>
-                    <span className="muted dot">•</span>
-                    <span className={r.destDiff >= 0 ? 'good' : 'bad'}>{r.destDiff >= 0 ? '+' : ''}{r.destDiff}%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lb-right">
-                <div className="micro">
-                  <div className="muted">Avg⭐</div>
-                  <div className="big">{r.avgStarsFor}</div>
-                </div>
-                <div className="micro">
-                  <div className="muted">Win%</div>
-                  <div className="big">{r.winRate}%</div>
-                </div>
-                <div className="points">{r.points}</div>
-              </div>
+      {/* Mobile/cards layout */}
+      <div className="lb-mobile">
+        {rows.map((r, i) => (
+          <div className="lb-card" key={r.teamId}>
+            <div className="lb-card-top">
+              <div className="rank">{i + 1}</div>
+              <div className="name"><Link to={`/teams/${r.teamId}`}>{r.name}</Link></div>
+              <div className="points">{r.points}</div>
             </div>
-          ))}
-        </div>
+            <div className="lb-card-row">
+              <span className="pill stat">P {r.played}</span>
+              <span className="pill stat win">W {r.wins}</span>
+              <span className="pill stat draw">D {r.draws}</span>
+              <span className="pill stat loss">L {r.losses}</span>
+            </div>
+            <div className="lb-card-row">
+              <span className="pill">⭐ {r.totalStars} ({r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff})</span>
+              <span className="pill">Avg⭐ {r.avgStarsFor}</span>
+            </div>
+            <div className="lb-card-prog">
+              <div className="muted">Avg Dest%</div>
+              <ProgressBar value={r.avgDestFor} max={100} color="linear-gradient(90deg, #22c55e, #60a5fa)" bg="rgba(255,255,255,.12)" height={10} />
+              <div className="muted tiny">Total {r.totalDestruction}% • Win {r.winRate}%</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -61,6 +61,7 @@ export default function Team() {
   if (!team) return <p className="error">Clan not found</p>;
 
   const stats = computeClanStats(team._id, matches);
+  const members = Array.isArray(team.members) && team.members.length > 0 ? team.members : (Array.isArray(team.players) ? team.players : []);
   const recent = matches
     .filter(m => [String(m.homeTeam?._id || m.homeTeam), String(m.awayTeam?._id || m.awayTeam)].includes(team._id))
     .slice(0, 6);
@@ -72,12 +73,12 @@ export default function Team() {
           {team.logoUrl ? <img src={team.logoUrl} alt={`${team.name} badge`} /> : <div className="avatar lg">{team.name.charAt(0)}</div>}
           <div>
             <h1>{team.name}</h1>
-            <div className="muted">{team.clanTag}</div>
+            {team.clanTag && <div className="muted">{team.clanTag}</div>}
             {team.leader && <div className="muted">Leader: {team.leader}</div>}
             <div className="muted">
               {team.warLeague && <span className="pill">{team.warLeague}</span>}
               <span className="pill">Level {team.level ?? '-'}</span>
-              <Link className="pill link" to="/schedule">See Schedule</Link>
+              <Link className="pill link" to="/#/schedule">See Schedule</Link>
             </div>
           </div>
         </div>
@@ -111,23 +112,22 @@ export default function Team() {
               </tr>
             </thead>
             <tbody>
-              {team.members?.map(p => (
-                <tr key={p._id}>
+              {Array.isArray(members) && members.length > 0 ? members.map((p, idx) => (
+                <tr key={p._id || `${p.name}-${idx}`}>
                   <td>{p.name}</td>
-                  <td>{p.role || '-'}</td>
+                  <td>{p.role || p.position || '-'}</td>
                   <td>{p.thLevel ?? '-'}</td>
                   <td>{p.heroes?.bk ?? 0}</td>
                   <td>{p.heroes?.aq ?? 0}</td>
                   <td>{p.heroes?.gw ?? 0}</td>
                   <td>{p.heroes?.rc ?? 0}</td>
-                  <td>{p.stats?.attacks ?? 0}</td>
-                  <td>{p.stats?.triples ?? 0}</td>
-                  <td>{p.stats?.stars ?? 0}</td>
+                  <td>{p.stats?.attacks ?? p.stats?.appearances ?? 0}</td>
+                  <td>{p.stats?.triples ?? p.stats?.goals ?? 0}</td>
+                  <td>{p.stats?.stars ?? p.stats?.goals ?? 0}</td>
                   <td>{p.stats?.avgStars ?? 0}</td>
                   <td>{p.stats?.avgDestruction ?? 0}%</td>
                 </tr>
-              ))}
-              {(!team.members || team.members.length === 0) && (
+              )) : (
                 <tr><td colSpan="12" className="muted">No members yet</td></tr>
               )}
             </tbody>
