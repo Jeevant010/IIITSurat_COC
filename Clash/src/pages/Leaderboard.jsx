@@ -12,41 +12,92 @@ export default function Leaderboard() {
     api.getLeaderboard().then(setRows).catch(e => setErr(e.message)).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p>Loading leaderboard…</p>;
-  if (err) return <p className="error">{err}</p>;
+  if (loading) return (
+    <div className="coc-loading">
+      <div className="coc-spinner"></div>
+      <p>Loading leaderboard...</p>
+    </div>
+  );
+  
+  if (err) return (
+    <div className="coc-error">
+      <div className="coc-error-icon">⚡</div>
+      <p className="coc-error-text">{err}</p>
+    </div>
+  );
+
+  const getRankBadge = (rank) => {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return rank;
+  };
+
+  const getRankClass = (rank) => {
+    if (rank === 1) return 'coc-rank-1';
+    if (rank === 2) return 'coc-rank-2';
+    if (rank === 3) return 'coc-rank-3';
+    return '';
+  };
 
   return (
-    <div>
-      <div className="page-head">
-        <h1>Standings</h1>
-        <div className="sub">Win=3 • Draw=1 • Loss=0</div>
+    <div className="coc-container">
+      <div className="coc-page-head">
+        <h1 className="coc-title">Clan Standings</h1>
+        <div className="coc-subtitle">
+          <span className="coc-points-system">Win = 3 pts • Draw = 1 pt • Loss = 0 pts</span>
+        </div>
       </div>
 
-      <div className="panel lb-desktop">
-        <div className="table-wrap">
-          <table className="lb-table">
+      {/* Desktop Table */}
+      <div className="coc-leaderboard-desktop">
+        <div className="coc-table-container">
+          <table className="coc-leaderboard-table">
             <thead>
               <tr>
-                <th>#</th><th>Clan</th>
-                <th>P</th><th>W</th><th>D</th><th>L</th>
-                <th>⭐ Total</th><th>⭐ Diff</th><th>Avg ⭐</th>
-                <th>Dest% Total</th><th>Dest% Avg</th>
-                <th>Win%</th><th>Pts</th>
+                <th className="coc-th-rank">Rank</th>
+                <th className="coc-th-clan">Clan</th>
+                <th className="coc-th-compact">P</th>
+                <th className="coc-th-compact">W</th>
+                <th className="coc-th-compact">D</th>
+                <th className="coc-th-compact">L</th>
+                <th className="coc-th-stats">⭐ Total</th>
+                <th className="coc-th-stats">⭐ Diff</th>
+                <th className="coc-th-stats">Avg ⭐</th>
+                <th className="coc-th-stats">Dest% Total</th>
+                <th className="coc-th-stats">Dest% Avg</th>
+                <th className="coc-th-stats">Win%</th>
+                <th className="coc-th-points">Points</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={r.teamId}>
-                  <td>{i + 1}</td>
-                  <td><Link to={`/teams/${r.teamId}`}>{r.name}</Link></td>
-                  <td>{r.played}</td><td>{r.wins}</td><td>{r.draws}</td><td>{r.losses}</td>
-                  <td>{r.totalStars}</td>
-                  <td>{r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff}</td>
-                  <td>{r.avgStarsFor}</td>
-                  <td>{r.totalDestruction}%</td>
-                  <td>{r.avgDestFor}%</td>
-                  <td>{r.winRate}%</td>
-                  <td><strong>{r.points}</strong></td>
+                <tr key={r.teamId} className={`coc-lb-row ${getRankClass(i + 1)}`}>
+                  <td className="coc-td-rank">
+                    <div className="coc-rank-badge">
+                      {getRankBadge(i + 1)}
+                    </div>
+                  </td>
+                  <td className="coc-td-clan">
+                    <Link to={`/teams/${r.teamId}`} className="coc-clan-link">
+                      <span className="coc-clan-name">{r.name}</span>
+                    </Link>
+                  </td>
+                  <td className="coc-td-compact">{r.played}</td>
+                  <td className="coc-td-win">{r.wins}</td>
+                  <td className="coc-td-draw">{r.draws}</td>
+                  <td className="coc-td-loss">{r.losses}</td>
+                  <td className="coc-td-stars">{r.totalStars}</td>
+                  <td className={`coc-td-diff ${r.starsDiff >= 0 ? 'positive' : 'negative'}`}>
+                    {r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff}
+                  </td>
+                  <td className="coc-td-stars">{r.avgStarsFor}</td>
+                  <td className="coc-td-destruction">{r.totalDestruction}%</td>
+                  <td className="coc-td-destruction">{r.avgDestFor}%</td>
+                  <td className="coc-td-winrate">{r.winRate}%</td>
+                  <td className="coc-td-points">
+                    <strong>{r.points}</strong>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -54,28 +105,71 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      <div className="lb-mobile">
+      {/* Mobile Cards */}
+      <div className="coc-leaderboard-mobile">
         {rows.map((r, i) => (
-          <div className="lb-card" key={r.teamId}>
-            <div className="lb-card-top">
-              <div className="rank">{i + 1}</div>
-              <div className="name"><Link to={`/teams/${r.teamId}`}>{r.name}</Link></div>
-              <div className="points">{r.points}</div>
+          <div key={r.teamId} className={`coc-lb-card ${getRankClass(i + 1)}`}>
+            {/* Card Header */}
+            <div className="coc-lb-card-header">
+              <div className="coc-lb-rank">
+                <div className="coc-rank-icon">{getRankBadge(i + 1)}</div>
+                <div className="coc-rank-number">#{i + 1}</div>
+              </div>
+              <div className="coc-lb-clan-info">
+                <Link to={`/teams/${r.teamId}`} className="coc-lb-clan-name">
+                  {r.name}
+                </Link>
+                <div className="coc-lb-points">{r.points} pts</div>
+              </div>
             </div>
-            <div className="lb-card-row">
-              <span className="pill stat">P {r.played}</span>
-              <span className="pill stat win">W {r.wins}</span>
-              <span className="pill stat draw">D {r.draws}</span>
-              <span className="pill stat loss">L {r.losses}</span>
+
+            {/* Stats Row */}
+            <div className="coc-lb-stats-row">
+              <div className="coc-stat-pill coc-stat-pill--played">
+                <div className="coc-stat-value">{r.played}</div>
+                <div className="coc-stat-label">Played</div>
+              </div>
+              <div className="coc-stat-pill coc-stat-pill--win">
+                <div className="coc-stat-value">{r.wins}</div>
+                <div className="coc-stat-label">Wins</div>
+              </div>
+              <div className="coc-stat-pill coc-stat-pill--draw">
+                <div className="coc-stat-value">{r.draws}</div>
+                <div className="coc-stat-label">Draws</div>
+              </div>
+              <div className="coc-stat-pill coc-stat-pill--loss">
+                <div className="coc-stat-value">{r.losses}</div>
+                <div className="coc-stat-label">Losses</div>
+              </div>
             </div>
-            <div className="lb-card-row">
-              <span className="pill">⭐ {r.totalStars} ({r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff})</span>
-              <span className="pill">Avg⭐ {r.avgStarsFor}</span>
+
+            {/* Stars Information */}
+            <div className="coc-lb-stars-info">
+              <div className="coc-stars-group">
+                <div className="coc-stars-total">
+                  <span className="coc-stars-icon">⭐</span>
+                  {r.totalStars} Total
+                </div>
+                <div className={`coc-stars-diff ${r.starsDiff >= 0 ? 'positive' : 'negative'}`}>
+                  {r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff} Diff
+                </div>
+              </div>
+              <div className="coc-stars-avg">
+                {r.avgStarsFor} Avg ⭐
+              </div>
             </div>
-            <div className="lb-card-prog">
-              <div className="muted">Avg Dest%</div>
-              <ProgressBar value={r.avgDestFor} max={100} />
-              <div className="muted tiny">Total {r.totalDestruction}% • Win {r.winRate}%</div>
+
+            {/* Destruction Progress */}
+            <div className="coc-lb-destruction">
+              <div className="coc-destruction-header">
+                <span>Average Destruction</span>
+                <span className="coc-destruction-value">{r.avgDestFor}%</span>
+              </div>
+              <ProgressBar value={r.avgDestFor} max={100} className="coc-progress--destruction" />
+              <div className="coc-destruction-footer">
+                <span>Total: {r.totalDestruction}%</span>
+                <span>Win Rate: {r.winRate}%</span>
+              </div>
             </div>
           </div>
         ))}
