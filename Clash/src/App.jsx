@@ -10,7 +10,7 @@ export default function App() {
   return (
     <div className="container">
       <header className="nav">
-        <Link to="/" className="brand">College Event</Link>
+        <Link to="/" className="brand">Indominus</Link>
         <nav>
           <NavLink to="/" end>Leaderboard</NavLink>
           <NavLink to="/teams">Teams</NavLink>
