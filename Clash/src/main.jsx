@@ -6,6 +6,8 @@ import './index.css';
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <App />
+    <HashRouter>
+      <App />
+    </HashRouter>
   </BrowserRouter>
 );
