@@ -1,103 +1,248 @@
 import React from 'react';
 
-// UEFA-style rounded cards with elbow connectors
-function Node({ titleTop, titleBottom, info, highlight }) {
+// UEFA-style match nodes with team flags and scores
+function MatchNode({ match, isWinnerTop, isWinnerBottom, roundType }) {
+  const homeTeam = match.homeTeam;
+  const awayTeam = match.awayTeam;
+  const homeScore = match.result?.home?.stars ?? 0;
+  const awayScore = match.result?.away?.stars ?? 0;
+  const homeDestruction = match.result?.home?.destruction ?? 0;
+  const awayDestruction = match.result?.away?.destruction ?? 0;
+  
+  const isCompleted = match.status === 'completed';
+  const isLive = match.status === 'battle';
+  const isScheduled = match.status === 'preparation';
+
+  // Determine winner based on stars, then destruction percentage
+  const getWinner = () => {
+    if (homeScore > awayScore) return 'home';
+    if (awayScore > homeScore) return 'away';
+    if (homeDestruction > awayDestruction) return 'home';
+    if (awayDestruction > homeDestruction) return 'away';
+    return 'draw';
+  };
+
+  const winner = getWinner();
+
   return (
-    <div className={`uefa-node ${highlight ? 'highlight' : ''}`}>
-      <div className="uefa-node-row">
-        <div className="uefa-node-side">
-          <span className="dot" />
-          <span className="name">{titleTop || 'TBD'}</span>
+    <div className={`uefa-match-node ${isCompleted ? 'completed' : ''} ${isLive ? 'live' : ''} ${roundType}`}>
+      {/* Match time for scheduled matches */}
+      {isScheduled && match.scheduledAt && (
+        <div className="match-time">
+          {new Date(match.scheduledAt).toLocaleDateString()}
         </div>
-        <div className="uefa-node-meta">{info?.top || ''}</div>
+      )}
+      
+      {/* Live match indicator */}
+      {isLive && (
+        <div className="live-indicator">
+          <span className="live-pulse"></span>
+          LIVE
+        </div>
+      )}
+
+      <div className="team-row home-team">
+        <div className="team-info">
+          <div className="team-flag">
+            {homeTeam?.logoUrl ? (
+              <img src={homeTeam.logoUrl} alt={homeTeam.name} />
+            ) : (
+              <div className="flag-placeholder">{homeTeam?.name?.charAt(0) || 'T'}</div>
+            )}
+          </div>
+          <span className={`team-name ${winner === 'home' ? 'winner' : ''}`}>
+            {homeTeam?.name || 'TBD'}
+          </span>
+        </div>
+        {isCompleted && (
+          <div className="team-score">
+            <span className="score">{homeScore}</span>
+            {homeDestruction > 0 && (
+              <span className="destruction">({homeDestruction}%)</span>
+            )}
+          </div>
+        )}
       </div>
-      <div className="uefa-node-row">
-        <div className="uefa-node-side">
-          <span className="dot muted" />
-          <span className="name">{titleBottom || 'TBD'}</span>
+
+      <div className="team-row away-team">
+        <div className="team-info">
+          <div className="team-flag">
+            {awayTeam?.logoUrl ? (
+              <img src={awayTeam.logoUrl} alt={awayTeam.name} />
+            ) : (
+              <div className="flag-placeholder">{awayTeam?.name?.charAt(0) || 'T'}</div>
+            )}
+          </div>
+          <span className={`team-name ${winner === 'away' ? 'winner' : ''}`}>
+            {awayTeam?.name || 'TBD'}
+          </span>
         </div>
-        <div className="uefa-node-meta">{info?.bottom || ''}</div>
+        {isCompleted && (
+          <div className="team-score">
+            <span className="score">{awayScore}</span>
+            {awayDestruction > 0 && (
+              <span className="destruction">({awayDestruction}%)</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Match metadata */}
+      <div className="match-meta">
+        {match.warType && (
+          <span className="war-type">{match.warType}</span>
+        )}
+        {match.size && (
+          <span className="team-size">{match.size}v{match.size}</span>
+        )}
       </div>
     </div>
   );
 }
 
-export default function UEFABracket({ rounds, accent = 'blue' }) {
+export default function UEFABracket({ rounds, accent = 'gold' }) {
   const refRoot = React.useRef(null);
   const refMap = React.useRef(new Map());
   const [paths, setPaths] = React.useState([]);
 
-  const keyOf = (r, i) => `r${r}-i${i}`;
+  const keyOf = (roundIndex, matchIndex) => `r${roundIndex}-m${matchIndex}`;
 
   React.useLayoutEffect(() => {
     const root = refRoot.current;
     if (!root) return;
-    const bbox = root.getBoundingClientRect();
-    const lines = [];
+    
+    const updatePaths = () => {
+      const bbox = root.getBoundingClientRect();
+      const lines = [];
 
-    for (let col = 0; col < rounds.length - 1; col++) {
-      const curr = rounds[col]?.matches || [];
-      for (let i = 0; i < curr.length; i++) {
-        const nextIdx = Math.floor(i / 2);
-        const fromEl = refMap.current.get(keyOf(col, i));
-        const toEl = refMap.current.get(keyOf(col + 1, nextIdx));
-        if (!fromEl || !toEl) continue;
+      for (let roundIdx = 0; roundIdx < rounds.length - 1; roundIdx++) {
+        const currentRound = rounds[roundIdx]?.matches || [];
+        const nextRound = rounds[roundIdx + 1]?.matches || [];
 
-        const a = fromEl.getBoundingClientRect();
-        const b = toEl.getBoundingClientRect();
+        for (let matchIdx = 0; matchIdx < currentRound.length; matchIdx++) {
+          const nextMatchIdx = Math.floor(matchIdx / 2);
+          
+          const fromEl = refMap.current.get(keyOf(roundIdx, matchIdx));
+          const toEl = refMap.current.get(keyOf(roundIdx + 1, nextMatchIdx));
+          
+          if (!fromEl || !toEl) continue;
 
-        const x1 = a.right - bbox.left;
-        const y1 = a.top + a.height / 2 - bbox.top;
-        const x2 = b.left - bbox.left;
-        const y2 = b.top + b.height / 2 - bbox.top;
+          const fromRect = fromEl.getBoundingClientRect();
+          const toRect = toEl.getBoundingClientRect();
 
-        const midX = x1 + (x2 - x1) * 0.60; // elbow
-        lines.push(`M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`);
+          const startX = fromRect.right - bbox.left;
+          const startY = fromRect.top + fromRect.height / 2 - bbox.top;
+          const endX = toRect.left - bbox.left;
+          const endY = toRect.top + toRect.height / 2 - bbox.top;
+
+          // Create curved connector path
+          const controlX1 = startX + (endX - startX) * 0.5;
+          const controlX2 = endX - (endX - startX) * 0.5;
+          
+          lines.push(
+            `M ${startX} ${startY} 
+             C ${controlX1} ${startY}, ${controlX2} ${endY}, ${endX} ${endY}`
+          );
+        }
       }
-    }
-    setPaths(lines);
+      setPaths(lines);
+    };
+
+    updatePaths();
+    window.addEventListener('resize', updatePaths);
+    return () => window.removeEventListener('resize', updatePaths);
   }, [rounds]);
 
-  return (
-    <div className={`uefa-bracket ${accent}`} ref={refRoot}>
-      <svg className="uefa-lines">
-        {paths.map((d, i) => <path key={i} d={d} />)}
-      </svg>
-      <div className="uefa-cols">
-        {rounds.map((round, colIdx) => (
-          <div className="uefa-col" key={round.round}>
-            <div className="uefa-col-title">Round {round.round}</div>
-            <div className="uefa-stack">
-              {round.matches.map((m, rowIdx) => {
-                const k = keyOf(colIdx, rowIdx);
-                const hs = Number(m.result?.home?.stars ?? 0);
-                const as = Number(m.result?.away?.stars ?? 0);
-                const hd = Number(m.result?.home?.destruction ?? 0);
-                const ad = Number(m.result?.away?.destruction ?? 0);
-                const leadHome = hs !== as ? hs > as : hd > ad;
+  const getRoundTitle = (round, index) => {
+    const roundNames = {
+      1: 'Round of 16',
+      2: 'Quarter-Finals',
+      3: 'Semi-Finals',
+      4: 'Grand Final'
+    };
+    
+    if (round.round && roundNames[round.round]) {
+      return roundNames[round.round];
+    }
+    
+    // Fallback based on bracket structure
+    const totalRounds = rounds.length;
+    if (index === totalRounds - 1) return 'Grand Final';
+    if (index === totalRounds - 2) return 'Semi-Finals';
+    if (index === totalRounds - 3) return 'Quarter-Finals';
+    return `Round ${round.round || index + 1}`;
+  };
 
-                return (
+  return (
+    <div className={`uefa-bracket-container ${accent}`} ref={refRoot}>
+      <div className="bracket-header">
+        <div className="tournament-title">
+          <span className="trophy-icon">🏆</span>
+          Clash Championship Bracket
+        </div>
+        <div className="bracket-legend">
+          <div className="legend-item">
+            <div className="legend-dot live"></div>
+            <span>Live Match</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-dot completed"></div>
+            <span>Completed</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-dot upcoming"></div>
+            <span>Upcoming</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="uefa-bracket">
+        <svg className="bracket-connectors">
+          {paths.map((d, i) => (
+            <path 
+              key={i} 
+              d={d} 
+              className="connector-path"
+              stroke="currentColor"
+            />
+          ))}
+        </svg>
+
+        <div className="bracket-rounds">
+          {rounds.map((round, roundIndex) => (
+            <div 
+              className={`bracket-round round-${roundIndex + 1}`} 
+              key={round.round || roundIndex}
+            >
+              <div className="round-header">
+                <div className="round-title">{getRoundTitle(round, roundIndex)}</div>
+                <div className="round-matches">{round.matches?.length || 0} Matches</div>
+              </div>
+              
+              <div className="round-matches-container">
+                {round.matches?.map((match, matchIndex) => (
                   <div
-                    key={m._id || k}
-                    ref={(el) => el && refMap.current.set(k, el)}
-                    className="uefa-cell"
+                    key={match._id || `${roundIndex}-${matchIndex}`}
+                    ref={(el) => el && refMap.current.set(keyOf(roundIndex, matchIndex), el)}
+                    className="match-container"
                   >
-                    <Node
-                      titleTop={m.homeTeam?.name}
-                      titleBottom={m.awayTeam?.name}
-                      info={{ top: `${hs}⭐ ${hd}%`, bottom: `${as}⭐ ${ad}%` }}
-                      highlight={leadHome}
+                    <MatchNode 
+                      match={match}
+                      roundType={getRoundTitle(round, roundIndex).toLowerCase().replace(' ', '-')}
                     />
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-        <div className="uefa-col trophy">
-          <div className="trophy-wrap">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Trophy_icon_3.svg" alt="Trophy" />
-            <div className="trophy-label">Final</div>
+          ))}
+          
+          {/* Trophy Column */}
+          <div className="bracket-round trophy-column">
+            <div className="trophy-display">
+              <div className="trophy-icon-large">🏆</div>
+              <div className="trophy-title">Champion</div>
+              <div className="trophy-subtitle">Clash of Clans</div>
+            </div>
           </div>
         </div>
       </div>

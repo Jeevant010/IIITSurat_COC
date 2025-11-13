@@ -10,13 +10,18 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
-// Middleware
 app.use(express.json());
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || true,
-  })
-);
+
+// CORS: explicitly allow the custom admin header and handle preflight
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || true,
+  methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'x-admin-password'],
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // respond to all preflights
+
 app.use(morgan('dev'));
 
 // DB
@@ -42,13 +47,11 @@ app.use('/api', adminRoutes);
 if (process.env.SERVE_FRONTEND === 'true') {
   const distPath = path.resolve(__dirname, '../../frontend/dist');
   app.use(express.static(distPath));
-  // Fallback for SPA routes (non-API)
   app.get(/^\/(?!api).*/, (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
-// Start
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
