@@ -16,14 +16,16 @@ const STAGES = ['group', 'eliminator', 'quarterfinal', 'semifinal', 'final'];
 // War types (normal CoC + esports + legend)
 const WAR_TYPES = ['regular', 'friendly', 'cwl', 'esports', 'legend'];
 
+// IMPORTANT: allow both status naming schemes used in your UI
+const STATUSES = ['scheduled', 'preparation', 'in-progress', 'battle', 'completed'];
+
 const MatchSchema = new Schema(
   {
     homeTeam: { type: Schema.Types.ObjectId, ref: 'Team', required: true },
     awayTeam: { type: Schema.Types.ObjectId, ref: 'Team', required: true },
     scheduledAt: { type: Date, required: true },
-    status: { type: String, enum: ['scheduled', 'in-progress', 'completed'], default: 'scheduled' },
+    status: { type: String, enum: STATUSES, default: 'scheduled', index: true },
 
-    // REQUIRED: stage is explicit (no generic "knockout")
     stage: { type: String, enum: STAGES, default: 'group', index: true },
 
     warType: { type: String, enum: WAR_TYPES, default: 'regular' },
@@ -36,7 +38,7 @@ const MatchSchema = new Schema(
     },
 
     // ordering for brackets
-    round: { type: Number, default: 1 },
+    round: { type: Number, default: 1, index: true },
     bracketId: { type: String, default: 'main', index: true }
   },
   { timestamps: true }

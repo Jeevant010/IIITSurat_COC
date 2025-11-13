@@ -18,15 +18,17 @@ export default function Admin() {
   const [manageTeam, setManageTeam] = React.useState(null);
   const [newMember, setNewMember] = React.useState({ name: '', playerTag: '', email: '', townHall: '', role: '' });
 
-  // Tournament UI state
-  const [groupGen, setGroupGen] = React.useState({
-    group: 'A', bracketId: 'main', teamIds: [], scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2
-  });
-  const [seedForm, setSeedForm] = React.useState({
-    group: 'A', bracketId: 'main', scheduledAtSemi1: '', scheduledAtElim: '', warType: 'regular', size: 15, attacksPerMember: 2
-  });
-  const [advanceForm, setAdvanceForm] = React.useState({
-    bracketId: 'main', scheduledAtSemi2: '', scheduledAtFinal: '', warType: 'regular', size: 15, attacksPerMember: 2
+  // Predesign UI state (TBD placeholders)
+  const [predesign, setPredesign] = React.useState({
+    bracketId: 'main',
+    status: 'preparation',
+    warType: 'regular',
+    size: 15,
+    attacksPerMember: 2,
+    scheduledAtSemi1: '',
+    scheduledAtElim: '',
+    scheduledAtSemi2: '',
+    scheduledAtFinal: '',
   });
 
   const refresh = React.useCallback(() => {
@@ -62,12 +64,13 @@ export default function Admin() {
     setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), [side]: { ...((s[id] || {})[side]), [field]: value } } }));
   }
   function handleStatusChange(id, value) { setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), status: value } })); }
+  function handleTeamChange(id, which, value) { setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), [which]: value } })); }
 
   function handleUpdateMatch(id) {
     const item = updateResults[id];
     if (!item) return;
     const payload = {
-      status: item.status || 'completed',
+      status: item.status || undefined,
       result: {
         home: {
           stars: item.home?.stars !== undefined ? Number(item.home.stars) : undefined,
@@ -81,6 +84,9 @@ export default function Admin() {
         }
       }
     };
+    if (item.homeTeam) payload.homeTeam = item.homeTeam;
+    if (item.awayTeam) payload.awayTeam = item.awayTeam;
+
     api.updateMatch(id, payload).then(() => { setMsg('War updated'); refresh(); }).catch(e => setMsg(e.message));
   }
 
@@ -122,7 +128,6 @@ export default function Admin() {
   }
 
   function updateMember(memberId, changes) { if (!manageTeam) return; api.updateMember(manageTeam._id, memberId, changes).then(t => { setManageTeam(t); setMsg('Member updated'); refresh(); }).catch(e => setMsg(e.message)); }
-
   function deleteMember(memberId) { if (!manageTeam) return; if (!confirm('Delete this member?')) return; api.deleteMember(manageTeam._id, memberId).then(t => { setManageTeam(t); setMsg('Member deleted'); refresh(); }).catch(e => setMsg(e.message)); }
 
   return (
@@ -130,7 +135,6 @@ export default function Admin() {
       <h1>Admin</h1>
       {msg && <p className="info">{msg}</p>}
 
-      {/* Admin Password */}
       <section className="panel">
         <h2>Admin Password</h2>
         <div className="form-row">
@@ -142,7 +146,6 @@ export default function Admin() {
         <small>Stored locally and sent as header x-admin-password</small>
       </section>
 
-      {/* Create Clan */}
       <section className="panel">
         <h2>Create Clan</h2>
         <form onSubmit={handleCreateTeam} className="form-row">
@@ -173,7 +176,6 @@ export default function Admin() {
         </div>
       </section>
 
-      {/* Manage selected clan */}
       {manageTeam && (
         <section className="panel">
           <h2>Manage Clan: {manageTeam.name}</h2>
@@ -263,7 +265,7 @@ export default function Admin() {
         </section>
       )}
 
-      {/* Create War (manual) */}
+      {/* Manual Create War */}
       <section className="panel">
         <h2>Create War</h2>
         <form onSubmit={handleCreateMatch} className="form-grid-3">
@@ -323,21 +325,21 @@ export default function Admin() {
         </form>
       </section>
 
-      {/* NEW: Generate Group Stage (4 teams → 6 matches) */}
+      {/* Predesign Knockout (TBD placeholders) */}
       <section className="panel">
-        <h2>Generate Group Stage (4 Teams)</h2>
+        <h2>Predesign Knockout (TBD teams)</h2>
         <div className="form-grid-3">
-          <label className="label">Group Code
-            <input value={groupGen.group} onChange={e => setGroupGen(s => ({ ...s, group: e.target.value }))} />
-          </label>
           <label className="label">Bracket ID
-            <input value={groupGen.bracketId} onChange={e => setGroupGen(s => ({ ...s, bracketId: e.target.value }))} />
+            <input value={predesign.bracketId} onChange={e => setPredesign(s => ({ ...s, bracketId: e.target.value }))} />
           </label>
-          <label className="label">Date/Time (all 6)
-            <input type="datetime-local" value={groupGen.scheduledAt} onChange={e => setGroupGen(s => ({ ...s, scheduledAt: e.target.value }))} />
+          <label className="label">Status
+            <select value={predesign.status} onChange={e => setPredesign(s => ({ ...s, status: e.target.value }))}>
+              <option value="preparation">preparation</option>
+              <option value="scheduled">scheduled</option>
+            </select>
           </label>
           <label className="label">War Type
-            <select value={groupGen.warType} onChange={e => setGroupGen(s => ({ ...s, warType: e.target.value }))}>
+            <select value={predesign.warType} onChange={e => setPredesign(s => ({ ...s, warType: e.target.value }))}>
               <option value="regular">regular</option>
               <option value="friendly">friendly</option>
               <option value="cwl">cwl</option>
@@ -346,97 +348,27 @@ export default function Admin() {
             </select>
           </label>
           <label className="label">Size
-            <select value={groupGen.size} onChange={e => setGroupGen(s => ({ ...s, size: Number(e.target.value) }))}>
+            <select value={predesign.size} onChange={e => setPredesign(s => ({ ...s, size: Number(e.target.value) }))}>
               {[5,10,15,20,30,50].map(n => <option key={n} value={n}>{n}v{n}</option>)}
             </select>
           </label>
           <label className="label">Attacks/Member
-            <select value={groupGen.attacksPerMember} onChange={e => setGroupGen(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
+            <select value={predesign.attacksPerMember} onChange={e => setPredesign(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
               <option value={1}>1</option>
               <option value={2}>2</option>
             </select>
           </label>
-
-          <div className="col-span-3">
-            <strong>Select exactly 4 teams:</strong>
-            <div className="chips">
-              {teams.map(t => {
-                const selected = groupGen.teamIds.includes(t._id);
-                return (
-                  <button
-                    type="button"
-                    key={t._id}
-                    className={`chip ${selected ? 'selected' : ''}`}
-                    onClick={() => {
-                      setGroupGen(s => {
-                        const exists = s.teamIds.includes(t._id);
-                        const next = exists ? s.teamIds.filter(id => id !== t._id) : [...s.teamIds, t._id];
-                        return { ...s, teamIds: next.slice(0, 4) };
-                      });
-                    }}
-                  >
-                    {t.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="right">
-            <button
-              className="btn-lg"
-              onClick={async () => {
-                try {
-                  if (groupGen.teamIds.length !== 4) throw new Error('Please select exactly 4 teams');
-                  // Persist group code onto teams (optional, for standings page)
-                  await Promise.all(groupGen.teamIds.map(id => api.updateTeam(id, { group: groupGen.group })));
-                  const resp = await api.generateGroupStage(groupGen);
-                  setMsg(`Created ${resp.count} group matches`);
-                  refresh();
-                } catch (e) { setMsg(e.message); }
-              }}
-            >
-              Create 6 Matches
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* NEW: Seed Knockout from Group Standings */}
-      <section className="panel">
-        <h2>Seed Knockout (Semi 1 and Eliminator) from Group</h2>
-        <div className="form-grid-3">
-          <label className="label">Group Code
-            <input value={seedForm.group} onChange={e => setSeedForm(s => ({ ...s, group: e.target.value }))} />
+          <label className="label">Semi 1 (Round 1)
+            <input type="datetime-local" value={predesign.scheduledAtSemi1} onChange={e => setPredesign(s => ({ ...s, scheduledAtSemi1: e.target.value }))} />
           </label>
-          <label className="label">Bracket ID
-            <input value={seedForm.bracketId} onChange={e => setSeedForm(s => ({ ...s, bracketId: e.target.value }))} />
+          <label className="label">Eliminator (Round 1)
+            <input type="datetime-local" value={predesign.scheduledAtElim} onChange={e => setPredesign(s => ({ ...s, scheduledAtElim: e.target.value }))} />
           </label>
-          <label className="label">Semi 1 Date/Time
-            <input type="datetime-local" value={seedForm.scheduledAtSemi1} onChange={e => setSeedForm(s => ({ ...s, scheduledAtSemi1: e.target.value }))} />
+          <label className="label">Semi 2 (Round 2)
+            <input type="datetime-local" value={predesign.scheduledAtSemi2} onChange={e => setPredesign(s => ({ ...s, scheduledAtSemi2: e.target.value }))} />
           </label>
-          <label className="label">Eliminator Date/Time
-            <input type="datetime-local" value={seedForm.scheduledAtElim} onChange={e => setSeedForm(s => ({ ...s, scheduledAtElim: e.target.value }))} />
-          </label>
-          <label className="label">War Type
-            <select value={seedForm.warType} onChange={e => setSeedForm(s => ({ ...s, warType: e.target.value }))}>
-              <option value="regular">regular</option>
-              <option value="friendly">friendly</option>
-              <option value="cwl">cwl</option>
-              <option value="esports">esports</option>
-              <option value="legend">legend</option>
-            </select>
-          </label>
-          <label className="label">Size
-            <select value={seedForm.size} onChange={e => setSeedForm(s => ({ ...s, size: Number(e.target.value) }))}>
-              {[5,10,15,20,30,50].map(n => <option key={n} value={n}>{n}v{n}</option>)}
-            </select>
-          </label>
-          <label className="label">Attacks/Member
-            <select value={seedForm.attacksPerMember} onChange={e => setSeedForm(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-            </select>
+          <label className="label">Final (Round 3)
+            <input type="datetime-local" value={predesign.scheduledAtFinal} onChange={e => setPredesign(s => ({ ...s, scheduledAtFinal: e.target.value }))} />
           </label>
 
           <div className="right">
@@ -444,70 +376,19 @@ export default function Admin() {
               className="btn-lg"
               onClick={async () => {
                 try {
-                  const resp = await api.seedKnockoutFromGroup(seedForm);
-                  setMsg(`Seeded ${resp.count} matches for knockout round 1`);
+                  const resp = await api.predesignKnockout(predesign);
+                  setMsg(resp.count ? `Created ${resp.count} placeholder matches` : 'Predesign already exists');
                   refresh();
                 } catch (e) { setMsg(e.message); }
               }}
             >
-              Create Semi 1 + Eliminator
+              Create 4 Placeholder Matches
             </button>
           </div>
         </div>
       </section>
 
-      {/* NEW: Advance to Semi 2 and Final */}
-      <section className="panel">
-        <h2>Advance Knockout (to Semi 2 and Final)</h2>
-        <div className="form-grid-3">
-          <label className="label">Bracket ID
-            <input value={advanceForm.bracketId} onChange={e => setAdvanceForm(s => ({ ...s, bracketId: e.target.value }))} />
-          </label>
-          <label className="label">Semi 2 Date/Time
-            <input type="datetime-local" value={advanceForm.scheduledAtSemi2} onChange={e => setAdvanceForm(s => ({ ...s, scheduledAtSemi2: e.target.value }))} />
-          </label>
-          <label className="label">Final Date/Time
-            <input type="datetime-local" value={advanceForm.scheduledAtFinal} onChange={e => setAdvanceForm(s => ({ ...s, scheduledAtFinal: e.target.value }))} />
-          </label>
-          <label className="label">War Type
-            <select value={advanceForm.warType} onChange={e => setAdvanceForm(s => ({ ...s, warType: e.target.value }))}>
-              <option value="regular">regular</option>
-              <option value="friendly">friendly</option>
-              <option value="cwl">cwl</option>
-              <option value="esports">esports</option>
-              <option value="legend">legend</option>
-            </select>
-          </label>
-          <label className="label">Size
-            <select value={advanceForm.size} onChange={e => setAdvanceForm(s => ({ ...s, size: Number(e.target.value) }))}>
-              {[5,10,15,20,30,50].map(n => <option key={n} value={n}>{n}v{n}</option>)}
-            </select>
-          </label>
-          <label className="label">Attacks/Member
-            <select value={advanceForm.attacksPerMember} onChange={e => setAdvanceForm(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-            </select>
-          </label>
-
-          <div className="right">
-            <button
-              className="btn-lg"
-              onClick={async () => {
-                try {
-                  const resp = await api.advanceKnockout(advanceForm);
-                  setMsg(`Advanced: Semi2 ${resp.semi2?._id ? 'ok' : '—'} • Final ${resp.final?._id ? 'ok' : '—'}`);
-                  refresh();
-                } catch (e) { setMsg(e.message); }
-              }}
-            >
-              Create Semi 2 + Final
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Update Wars table */}
+      {/* Update Wars: now editable Home/Away team for replacing TBD */}
       <section className="panel">
         <h2>Update Wars</h2>
         <div className="table-wrap">
@@ -524,19 +405,40 @@ export default function Admin() {
                   <td>{m.stage || 'group'}</td>
                   <td>{m.warType}</td>
                   <td>{m.size}v{m.size}</td>
-                  <td>{m.homeTeam?.name}</td>
+
+                  <td>
+                    <select
+                      defaultValue={m.homeTeam?._id || ''}
+                      onChange={e => handleTeamChange(m._id, 'homeTeam', e.target.value)}
+                    >
+                      <option value="">— choose —</option>
+                      {teams.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+                    </select>
+                  </td>
                   <td className="score-edit">
                     <input className="cell-input" type="number" placeholder={String(m.result?.home?.stars ?? 0)} onChange={e => handleResultChange(m._id, 'home', 'stars', e.target.value)} />⭐
                     <input className="cell-input" type="number" step="0.1" placeholder={String(m.result?.home?.destruction ?? 0)} onChange={e => handleResultChange(m._id, 'home', 'destruction', e.target.value)} />%
                   </td>
-                  <td>{m.awayTeam?.name}</td>
+
+                  <td>
+                    <select
+                      defaultValue={m.awayTeam?._id || ''}
+                      onChange={e => handleTeamChange(m._id, 'awayTeam', e.target.value)}
+                    >
+                      <option value="">— choose —</option>
+                      {teams.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+                    </select>
+                  </td>
                   <td className="score-edit">
                     <input className="cell-input" type="number" placeholder={String(m.result?.away?.stars ?? 0)} onChange={e => handleResultChange(m._id, 'away', 'stars', e.target.value)} />⭐
                     <input className="cell-input" type="number" step="0.1" placeholder={String(m.result?.away?.destruction ?? 0)} onChange={e => handleResultChange(m._id, 'away', 'destruction', e.target.value)} />%
                   </td>
+
                   <td>
                     <select onChange={e => handleStatusChange(m._id, e.target.value)} defaultValue={m.status}>
+                      <option value="preparation">preparation</option>
                       <option value="scheduled">scheduled</option>
+                      <option value="battle">battle</option>
                       <option value="in-progress">in-progress</option>
                       <option value="completed">completed</option>
                     </select>

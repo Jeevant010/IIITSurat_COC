@@ -1,0 +1,67 @@
+/* Scoped bracket styles – safe to import without touching your global theme */
+
+.uefa-bracket-container{display:grid;gap:1rem}
+.bracket-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0)), var(--panel);border:1px solid var(--line);border-radius:1rem;padding:1rem}
+.tournament-title{display:flex;align-items:center;gap:.8rem}
+.trophy-icon{font-size:1.6rem}
+.title-content h1{margin:0;font-size:1.2rem;letter-spacing:.4px}
+.tournament-subtitle{color:var(--muted);font-weight:700;font-size:.85rem}
+.bracket-legend{display:flex;gap:.8rem;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:.4rem;color:var(--muted);font-weight:800}
+.legend-dot{width:10px;height:10px;border-radius:50%;border:1px solid var(--line);background:#7b8bb6}
+.legend-dot.live{background:#ff5d6c}
+.legend-dot.completed{background:#56e39f}
+.legend-dot.upcoming{background:#ffcf4a}
+
+/* Board */
+.uefa-bracket{position:relative;overflow:auto;border:1px solid #dbe5ff;border-radius:1.2rem;background:#eef3ff;color:#5b7aa8}
+.bracket-connectors{position:absolute;inset:0;pointer-events:none}
+.connector-path{stroke-width:3;fill:none;opacity:.9}
+.bracket-rounds{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(320px,1fr);gap:1.2rem;padding:1rem}
+.bracket-round{display:flex;flex-direction:column;gap:1rem;min-width:320px}
+.round-header{display:flex;flex-direction:column;gap:.2rem}
+.round-title strong{color:#2b3a59}
+.round-subtitle strong{color:#4e5f86}
+
+/* Match cards */
+.match-container{position:relative}
+.uefa-match-node{background:#fff;border:1px solid #dfe7ff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);padding:.7rem;display:grid;gap:.6rem}
+.uefa-match-node.final-match{outline:2px solid #ffd166}
+.match-header{display:flex;align-items:center;justify-content:space-between}
+.match-time{color:#2b3a59}
+.live-indicator{display:flex;align-items:center;gap:.4rem;color:#c62828}
+.live-pulse{width:10px;height:10px;border-radius:50%;background:#ff5d6c;box-shadow:0 0 0 4px rgba(255,93,108,.25);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+.teams-section{display:grid;gap:.5rem}
+.team-row{display:flex;align-items:center;justify-content:space-between;gap:.6rem}
+.team-row.winner{outline:2px solid #55b6ff;border-radius:12px}
+.team-info{display:flex;align-items:center;gap:.6rem}
+.team-flag img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid #dfe7ff}
+.flag-placeholder{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#eef3ff;color:#2b3a59;border:1px solid #dfe7ff;font-weight:900}
+.team-details{display:flex;align-items:center;gap:.4rem}
+.team-name{color:#1c2741}
+.destruction-badge{background:#eef3ff;border:1px solid #dfe7ff;border-radius:999px;padding:.1rem .45rem;font-weight:800;color:#4e5f86}
+.team-score{display:grid;justify-items:end}
+.score{font-size:1.2rem;color:#1c2741}
+.score-label{font-size:.7rem;color:#4e5f86}
+.match-divider{display:grid;justify-items:center}
+.vs-text{font-weight:900;color:#2b3a59}
+
+.match-meta{display:flex;gap:.6rem;flex-wrap:wrap}
+.match-status.completed{color:#2e7d32}
+.match-status.scheduled{color:#4e5f86}
+
+/* Trophy column */
+.trophy-column{min-width:260px;display:flex;align-items:center}
+.trophy-display{background:#ffffffc9;border:1px dashed #c7d6ff;border-radius:16px;padding:1rem;display:grid;justify-items:center;gap:.5rem}
+.trophy-icon-large{font-size:3rem}
+.trophy-title{color:#2b3a59}
+.trophy-subtitle{color:#4e5f86}
+.trophy-year{color:#1c2741}
+
+/* Responsive */
+@media (max-width: 900px){
+  .bracket-rounds{grid-auto-columns:minmax(260px,1fr)}
+  .bracket-round{min-width:260px}
+}

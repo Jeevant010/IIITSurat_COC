@@ -5,7 +5,6 @@ const { computeLeaderboard } = require('../utils/leaderboard');
 
 const router = express.Router();
 
-// Map old "players" to new "members" if legacy docs exist
 function mapPlayersToMembers(players = []) {
   return players.map((p) => ({
     _id: p._id,
@@ -25,7 +24,7 @@ function mapPlayersToMembers(players = []) {
   }));
 }
 
-// Clans list (lightweight + member counts)
+// Clans list
 router.get('/teams', async (req, res) => {
   try {
     const teams = await Team.find(
@@ -44,7 +43,7 @@ router.get('/teams', async (req, res) => {
   }
 });
 
-// Clan details (members always in new shape)
+// Clan details
 router.get('/teams/:id', async (req, res) => {
   try {
     const t = await Team.findById(req.params.id).lean();
@@ -60,12 +59,12 @@ router.get('/teams/:id', async (req, res) => {
   }
 });
 
-// All wars (stage + warType visible)
+// Schedule (all wars)
 router.get('/schedule', async (req, res) => {
   try {
     const matches = await Match.find()
-      .populate('homeTeam', 'name')
-      .populate('awayTeam', 'name')
+      .populate('homeTeam', 'name logoUrl')
+      .populate('awayTeam', 'name logoUrl')
       .sort({ scheduledAt: 1 });
     res.json(matches);
   } catch (e) {
@@ -73,7 +72,7 @@ router.get('/schedule', async (req, res) => {
   }
 });
 
-// Overall leaderboard (completed)
+// Leaderboard (completed only)
 router.get('/leaderboard', async (req, res) => {
   try {
     const teams = await Team.find();
@@ -88,45 +87,13 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
-// Group standings (completed group stage)
-router.get('/group-standings', async (req, res) => {
-  try {
-    const teams = await Team.find().lean();
-    const matches = await Match.find({ status: 'completed', stage: 'group' })
-      .populate('homeTeam', 'name')
-      .populate('awayTeam', 'name');
-
-    const groups = new Map();
-    for (const t of teams) {
-      const g = t.group || 'UNGROUPED';
-      if (!groups.has(g)) groups.set(g, []);
-      groups.get(g).push(t);
-    }
-
-    const result = [];
-    for (const [group, members] of groups.entries()) {
-      const mset = matches.filter(m =>
-        members.some(t => String(t._id) === String(m.homeTeam?._id || m.homeTeam)) ||
-        members.some(t => String(t._id) === String(m.awayTeam?._id || m.awayTeam))
-      );
-      const board = computeLeaderboard(members, mset);
-      result.push({ group, table: board });
-    }
-
-    result.sort((a, b) => a.group.localeCompare(b.group));
-    res.json(result);
-  } catch (e) {
-    res.status(500).json({ error: 'Failed to compute group standings' });
-  }
-});
-
-// Knockout bracket (everything not group)
+// Knockout bracket by rounds (logoUrl included)
 router.get('/bracket', async (req, res) => {
   try {
     const bracketId = req.query.bracketId || 'main';
     const matches = await Match.find({ bracketId, stage: { $ne: 'group' } })
-      .populate('homeTeam', 'name')
-      .populate('awayTeam', 'name')
+      .populate('homeTeam', 'name logoUrl')
+      .populate('awayTeam', 'name logoUrl')
       .sort({ round: 1, scheduledAt: 1, createdAt: 1 });
 
     const roundsMap = new Map();
@@ -142,8 +109,8 @@ router.get('/bracket', async (req, res) => {
         size: m.size,
         attacksPerMember: m.attacksPerMember,
         scheduledAt: m.scheduledAt,
-        homeTeam: m.homeTeam ? { _id: m.homeTeam._id, name: m.homeTeam.name } : null,
-        awayTeam: m.awayTeam ? { _id: m.awayTeam._id, name: m.awayTeam.name } : null,
+        homeTeam: m.homeTeam ? { _id: m.homeTeam._id, name: m.homeTeam.name, logoUrl: m.homeTeam.logoUrl || '' } : null,
+        awayTeam: m.awayTeam ? { _id: m.awayTeam._id, name: m.awayTeam.name, logoUrl: m.awayTeam.logoUrl || '' } : null,
         result: m.result
       });
     }

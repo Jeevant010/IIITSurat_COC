@@ -2,6 +2,7 @@ const express = require('express');
 const adminAuth = require('../middleware/adminAuth');
 const Team = require('../models/Team');
 const Match = require('../models/Match');
+const { normalizeStatus } = require('../utils/status');
 
 const router = express.Router();
 router.use(adminAuth);
@@ -147,13 +148,13 @@ router.delete('/teams/:id/members/:memberId', async (req, res) => {
   }
 });
 
-// Wars CRUD (with stage + expanded warType)
+// Matches
 router.post('/matches', async (req, res) => {
   try {
     const {
       homeTeam, awayTeam, scheduledAt,
       stage = 'group', warType = 'regular', size = 15, attacksPerMember,
-      round = 1, bracketId = 'main'
+      round = 1, bracketId = 'main', status
     } = req.body;
 
     if (!homeTeam || !awayTeam || !scheduledAt) {
@@ -161,6 +162,7 @@ router.post('/matches', async (req, res) => {
     }
 
     const apm = attacksPerMember ?? (warType === 'cwl' ? 1 : 2);
+    const normStatus = normalizeStatus(status);
 
     const match = await Match.create({
       homeTeam,
@@ -171,12 +173,15 @@ router.post('/matches', async (req, res) => {
       size,
       attacksPerMember: apm,
       round,
-      bracketId
+      bracketId,
+      ...(normStatus ? { status: normStatus } : {}) // if not provided, schema default applies
     });
+
     const populated = await match.populate([
       { path: 'homeTeam', select: 'name' },
       { path: 'awayTeam', select: 'name' }
     ]);
+
     res.status(201).json(populated);
   } catch (e) {
     res.status(500).json({ error: 'Failed to create war', details: e.message });
@@ -200,7 +205,10 @@ router.put('/matches/:id', async (req, res) => {
     if (attacksPerMember !== undefined) updates.attacksPerMember = attacksPerMember;
     if (round !== undefined) updates.round = round;
     if (bracketId !== undefined) updates.bracketId = bracketId;
-    if (status) updates.status = status;
+
+    const normStatus = normalizeStatus(status);
+    if (normStatus) updates.status = normStatus;
+
     if (result) {
       updates.result = {
         home: {
@@ -219,6 +227,7 @@ router.put('/matches/:id', async (req, res) => {
     const match = await Match.findByIdAndUpdate(req.params.id, updates, { new: true })
       .populate('homeTeam', 'name')
       .populate('awayTeam', 'name');
+
     if (!match) return res.status(404).json({ error: 'War not found' });
     res.json(match);
   } catch (e) {
@@ -233,53 +242,6 @@ router.delete('/matches/:id', async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Failed to delete war' });
-  }
-});
-
-// Bracket generation: set stage explicitly (default eliminator)
-router.post('/bracket/generate', async (req, res) => {
-  try {
-    const {
-      bracketId = 'main', teamIds = [], scheduledAt,
-      round = 1, stage = 'eliminator', warType = 'regular', size = 15, attacksPerMember
-    } = req.body;
-
-    if (!Array.isArray(teamIds) || teamIds.length < 2) {
-      return res.status(400).json({ error: 'teamIds array of length >= 2 required' });
-    }
-    if (!scheduledAt) {
-      return res.status(400).json({ error: 'scheduledAt required for initial wars' });
-    }
-    const apm = attacksPerMember ?? (warType === 'cwl' ? 1 : 2);
-    const pairs = [];
-    for (let i = 0; i < teamIds.length; i += 2) {
-      const home = teamIds[i];
-      const away = teamIds[i + 1];
-      if (!away) break;
-      pairs.push({ home, away });
-    }
-    const created = await Promise.all(
-      pairs.map((p) =>
-        Match.create({
-          homeTeam: p.home,
-          awayTeam: p.away,
-          scheduledAt: new Date(scheduledAt),
-          stage,
-          warType,
-          size,
-          attacksPerMember: apm,
-          round,
-          bracketId
-        })
-      )
-    );
-    const populated = await Match.find({ _id: { $in: created.map((c) => c._id) } })
-      .populate('homeTeam', 'name')
-      .populate('awayTeam', 'name')
-      .sort({ createdAt: 1 });
-    res.status(201).json({ created: populated, count: populated.length });
-  } catch (e) {
-    res.status(500).json({ error: 'Failed to generate bracket', details: e.message });
   }
 });
 
