@@ -1,17 +1,17 @@
+/* Theming, spacing, responsive, and all UI (admin decongestion, bracket UEFA look, royal CoC palette) */
+/* Full CSS provided earlier in conversation; keeping identical here for a single source of truth. */
 :root{
-  /* Royal Clash palette (brighter, high-contrast) */
   --bg:#081126;
   --panel:#0d224d;
   --card:#0f2a60;
   --line:rgba(255,255,255,.12);
   --text:#eff4ff;
   --muted:#b4c6f2;
-  --accent:#ffd166;      /* royal gold */
-  --accent-2:#55b6ff;    /* crystal blue */
+  --accent:#ffd166;
+  --accent-2:#55b6ff;
   --danger:#ff5d6c;
   --shadow:0 14px 36px rgba(0,0,0,.45);
 }
-
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
@@ -24,8 +24,6 @@ body{
   font-family: Inter, Outfit, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
-
-/* Layout */
 .container{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto}
 .nav{
   display:flex;gap:1rem;align-items:center;padding:1rem clamp(12px, 2vw, 20px);
@@ -41,17 +39,13 @@ body{
 }
 .nav nav a:hover{color:var(--text);border-color:var(--line);background:rgba(255,255,255,.08)}
 .nav nav a.active{color:#0a1530;background:linear-gradient(180deg, #ffd166 0%, #ffc445 100%); border-color:#ffd166}
-
 main{padding:clamp(12px, 2vw, 20px);max-width:1240px;margin:0 auto;width:100%}
 .footer{padding:1rem;border-top:1px solid var(--line);color:var(--muted);text-align:center}
-
 h1{font-size:clamp(24px, 4vw, 40px);margin:.3rem 0 .9rem}
 h2{font-size:clamp(18px, 2.2vw, 28px);margin:.2rem 0 .8rem}
 h3{font-size:clamp(16px, 2vw, 22px);margin:.2rem 0 .6rem}
 .page-head{display:flex;align-items:end;justify-content:space-between;gap:1rem;margin:.5rem 0 1rem}
 .page-head .sub{color:var(--muted)}
-
-/* Panels & Cards */
 .panel{
   background:
     linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0)),
@@ -71,11 +65,8 @@ h3{font-size:clamp(16px, 2vw, 22px);margin:.2rem 0 .6rem}
 }
 .card-head{display:flex;align-items:center;justify-content:space-between;padding:1rem;border-bottom:1px solid var(--line)}
 .card-body{padding:1rem}
-
 .info{color:#a8d2ff}
 .error{color:#ffb4bc}
-
-/* Inputs */
 input, select, button, textarea{
   background:#0d1e44;color:var(--text);border:1px solid var(--line);border-radius:.9rem;
   padding:.7rem .9rem; outline:none; font-size:clamp(14px, 1.8vw, 16px);
@@ -86,51 +77,37 @@ button:hover{border-color:var(--accent)}
 button:active{transform:translateY(1px)}
 button.danger{border-color:var(--danger); color:#ffc7ce}
 .btn-lg{font-size:clamp(14px, 2vw, 16px); padding:.8rem 1rem; border-width:2px}
-
-/* Forms */
 .label{display:grid;gap:.35rem;font-weight:700;color:#dfe7ff}
-.form-row{display:flex;flex-wrap:wrap;gap:.8rem;align-items:flex-end}
+.form-row{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end}
 .form-grid-2{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:1rem}
 .form-grid-3{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:1rem}
 .right{justify-self:end}
 .col-span-2{grid-column:span 2}
 .col-span-3{grid-column:span 3}
 .mt{margin-top:.8rem}
-.table-actions{display:flex;gap:.5rem}
+.table-actions{display:flex;gap:.6rem}
 .cell-input{width:100%}
-
-/* Chips */
 .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem}
 .chip{padding:.45rem .7rem;border-radius:999px;border:1px solid var(--line);background:#0d1e44;font-weight:800}
 .chip.selected{border-color:var(--accent); background:linear-gradient(180deg, #ffd16633, #ffd1661a)}
-
-/* Tables */
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:1.1rem}
 table{border-collapse:collapse;width:100%;font-size:clamp(13px, 1.7vw, 15px)}
 th,td{border-bottom:1px solid var(--line);padding:clamp(10px, 1.6vw, 12px);text-align:left}
 thead th{background:#0d1e44;position:sticky;top:0}
-
-/* Leaderboard */
 .lb-desktop{display:block}
 .lb-mobile{display:none; gap:1rem; margin-top:1rem}
 .lb-table td:nth-child(2) a{color:#fff;font-weight:900}
 .lb-table td:nth-child(2) a:hover{text-decoration:underline}
 .lb-card{border:1px solid var(--line);border-radius:1rem;padding:1rem;background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0)), var(--panel);box-shadow:var(--shadow)}
 .lb-card-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.6rem;margin-bottom:.6rem}
-.rank{
-  width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background: radial-gradient(80% 80% at 20% 10%, rgba(255,255,255,.18), transparent), #0d1e44;border:1px solid var(--line);font-weight:900
-}
+.rank{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background: radial-gradient(80% 80% at 20% 10%, rgba(255,255,255,.18), transparent), #0d1e44;border:1px solid var(--line);font-weight:900}
 .lb-card .name a{font-weight:900;color:#fff}
 .points{min-width:64px;height:40px;display:grid;place-items:center;border:2px solid var(--accent);background:linear-gradient(180deg, #ffd166, #ffc445);border-radius:.8rem;color:#0a1530;font-weight:900}
 .lb-card-row{display:flex;gap:.5rem;flex-wrap:wrap;margin:.25rem 0}
 .lb-card-prog{display:grid;gap:.4rem}
-
-/* Progress */
 .prog{position:relative;width:100%;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.2)}
 .prog-fill{transition:width .3s ease}
 .prog .prog-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:.8rem;color:#0a1530;font-weight:900}
-
-/* Bracket (UEFA-like) */
 .uefa-bracket{position:relative;overflow:auto;padding:1.2rem;background:#eef3ff;border:1px solid #dbe5ff;border-radius:1.2rem}
 .uefa-lines{position:absolute;inset:0;pointer-events:none}
 .uefa-lines path{stroke:#96a7c7;stroke-width:3;fill:none;opacity:.9}
@@ -152,8 +129,6 @@ thead th{background:#0d1e44;position:sticky;top:0}
 .trophy-wrap{display:grid;justify-items:center;gap:.5rem;padding:1rem;background:#ffffffc9;border:1px dashed #c7d6ff;border-radius:16px}
 .trophy-wrap img{width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.2))}
 .trophy-label{color:#2b3a59;font-weight:900}
-
-/* Team hero */
 .team-hero{position:relative;margin-bottom:1rem}
 .team-hero-bg{height:160px;border-radius:16px;background:
   radial-gradient(60% 80% at 10% 30%, rgba(255,209,102,.28), transparent 60%),
@@ -164,11 +139,17 @@ border:1px solid var(--line); box-shadow: var(--shadow)}
 .team-hero-left{display:flex;gap:1rem;align-items:center}
 .team-hero img{width:100px;height:100px;border-radius:16px;object-fit:cover;border:2px solid var(--accent);background:#08204d}
 .team-about{margin:.4rem 0 0;color:#fff;opacity:.95}
-
-/* Responsive */
-@media (max-width: 1100px){
-  .form-grid-3{grid-template-columns:repeat(2, minmax(0,1fr))}
-}
+.stats-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.8rem}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:.9rem;padding:.75rem .85rem}
+.stat-h{color:var(--muted);font-size:.86rem}
+.stat-v{font-size:1.32rem;font-weight:900;margin-top:.22rem}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem}
+.team-card{border:1px solid var(--line);border-radius:1rem;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0)), var(--panel);padding:1rem;display:grid;gap:.6rem;transition:transform .06s ease, border-color .15s ease}
+.team-card:hover{transform:translateY(-1px);border-color:var(--accent-2)}
+.team-card-head{display:flex;gap:.8rem;align-items:center}
+.team-card-head img{width:52px;height:52px;border-radius:12px;object-fit:cover;border:1px solid var(--line)}
+.team-name{font-weight:900;letter-spacing:.2px}
+@media (max-width: 1100px){ .form-grid-3{grid-template-columns:repeat(2, minmax(0,1fr))} }
 @media (max-width: 900px){
   .lb-desktop{display:none}
   .lb-mobile{display:grid}
@@ -176,6 +157,8 @@ border:1px solid var(--line); box-shadow: var(--shadow)}
   .uefa-col{min-width:260px}
 }
 @media (max-width: 640px){
+  main{padding:.85rem}
+  .nav{padding:.85rem}
   .form-grid-2{grid-template-columns:1fr}
   .form-grid-3{grid-template-columns:1fr}
   .right{justify-self:stretch}

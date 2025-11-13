@@ -3,8 +3,8 @@ const { Schema } = mongoose;
 
 const SideResultSchema = new Schema(
   {
-    stars: { type: Number, default: 0 },         // total stars
-    destruction: { type: Number, default: 0 },   // 0..100
+    stars: { type: Number, default: 0 },
+    destruction: { type: Number, default: 0 }, // 0..100
     attacksUsed: { type: Number, default: 0 }
   },
   { _id: false }
@@ -16,6 +16,7 @@ const MatchSchema = new Schema(
     awayTeam: { type: Schema.Types.ObjectId, ref: 'Team', required: true },
     scheduledAt: { type: Date, required: true },
     status: { type: String, enum: ['scheduled', 'in-progress', 'completed'], default: 'scheduled' },
+    stage: { type: String, enum: ['group', 'knockout'], default: 'group', index: true }, // NEW: group vs playoff
     warType: { type: String, enum: ['friendly', 'regular', 'cwl'], default: 'regular' },
     size: { type: Number, enum: [5, 10, 15, 20, 30, 50], default: 15 },
     attacksPerMember: { type: Number, enum: [1, 2], default: 2 },

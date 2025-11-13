@@ -29,6 +29,7 @@ export const api = {
   getTeam: (id) => request(`/teams/${id}`),
   getSchedule: () => request('/schedule'),
   getLeaderboard: () => request('/leaderboard'),
+  getGroupStandings: () => request('/group-standings'),
   getBracket: (bracketId = 'main') => request(`/bracket?bracketId=${encodeURIComponent(bracketId)}`),
 
   // Admin Clans

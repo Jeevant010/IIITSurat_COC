@@ -1,11 +1,5 @@
 import React from 'react';
 
-/**
- * UEFA-style bracket
- * - White pill cards with rounded corners
- * - Silver elbow connectors; highlight possibility with blue accent
- * - Responsive columns, trophy panel at the far right
- */
 function Node({ titleTop, titleBottom, info, highlight }) {
   return (
     <div className={`uefa-node ${highlight ? 'highlight' : ''}`}>
@@ -55,8 +49,8 @@ export default function UEFABracket({ rounds, accent = 'blue' }) {
         const y1 = a.top + a.height / 2 - bbox.top;
         const x2 = b.left - bbox.left;
         const y2 = b.top + b.height / 2 - bbox.top;
-        const midX = x1 + (x2 - x1) * 0.60;
 
+        const midX = x1 + (x2 - x1) * 0.60;
         lines.push(`M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`);
       }
     }

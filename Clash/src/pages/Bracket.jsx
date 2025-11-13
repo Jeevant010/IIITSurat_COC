@@ -1,6 +1,6 @@
 import React from 'react';
 import { api } from '../api/client';
-import UEFABracket from '../components/UEFABracket.jsx';
+import UEFABracket from '../components/UEFABracket';
 
 export default function Bracket() {
   const [bracketId, setBracketId] = React.useState('main');
@@ -23,13 +23,11 @@ export default function Bracket() {
       <div className="page-head">
         <h1>Championship Bracket</h1>
         <div className="row">
-          <label className="label">
-            Bracket ID
+          <label className="label">Bracket ID
             <input value={bracketId} onChange={e => setBracketId(e.target.value)} onBlur={load} />
           </label>
         </div>
       </div>
-
       {loading && <p>Loading bracket…</p>}
       {err && <p className="error">{err}</p>}
       {data && <UEFABracket rounds={data.rounds} accent="blue" />}

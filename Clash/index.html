@@ -8,9 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- Direct-link rescue for HashRouter: turn /path into #/path BEFORE React loads -->
     <script>
+      // Convert direct links like /teams/:id into hash routes to avoid refresh 404s.
       (function () {
         try {
           var hasHash = location.hash && location.hash.startsWith('#/');

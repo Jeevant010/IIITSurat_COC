@@ -1,6 +1,5 @@
-// Leaderboard for Clash of Clans wars
-// Scoring: Win=3, Draw=1, Loss=0
-// Tie-breakers: Stars Diff, Avg Destruction, Avg Stars, then Name
+// Clash wars leaderboard with richer stats
+// Win=3, Draw=1, Loss=0. Tie-breaks: Stars Diff, Avg Destruction, Avg Stars, Name.
 function computeLeaderboard(teams, matches) {
   const table = new Map();
   for (const t of teams) {
@@ -14,14 +13,13 @@ function computeLeaderboard(teams, matches) {
       starsFor: 0,
       starsAgainst: 0,
       starsDiff: 0,
-      destFor: 0,          // sum of destruction% across completed wars
+      destFor: 0,
       destAgainst: 0,
       destDiff: 0,
       avgDestFor: 0,
       avgStarsFor: 0,
       winRate: 0,
       points: 0,
-      // explicit totals (aliases for clarity)
       totalStars: 0,
       totalDestruction: 0
     });
@@ -40,27 +38,22 @@ function computeLeaderboard(teams, matches) {
     const hd = Number(m.result?.home?.destruction ?? 0);
     const ad = Number(m.result?.away?.destruction ?? 0);
 
-    home.played += 1; away.played += 1;
-
+    home.played++; away.played++;
     home.starsFor += hs; home.starsAgainst += as;
     away.starsFor += as; away.starsAgainst += hs;
-
     home.destFor += hd; home.destAgainst += ad;
     away.destFor += ad; away.destAgainst += hd;
 
-    // Decide winner: stars first, then destruction
-    let homePts = 0; let awayPts = 0;
-    if (hs > as) { home.wins += 1; away.losses += 1; homePts = 3; }
-    else if (hs < as) { away.wins += 1; home.losses += 1; awayPts = 3; }
+    if (hs > as) { home.wins++; away.losses++; home.points += 3; }
+    else if (hs < as) { away.wins++; home.losses++; away.points += 3; }
     else {
-      if (hd > ad) { home.wins += 1; away.losses += 1; homePts = 3; }
-      else if (hd < ad) { away.wins += 1; home.losses += 1; awayPts = 3; }
-      else { home.draws += 1; away.draws += 1; homePts = 1; awayPts = 1; }
+      if (hd > ad) { home.wins++; away.losses++; home.points += 3; }
+      else if (hd < ad) { away.wins++; home.losses++; away.points += 3; }
+      else { home.draws++; away.draws++; home.points++; away.points++; }
     }
-    home.points += homePts; away.points += awayPts;
   }
 
-  const list = Array.from(table.values()).map((r) => {
+  const list = Array.from(table.values()).map(r => {
     r.starsDiff = r.starsFor - r.starsAgainst;
     r.destDiff = +(r.destFor - r.destAgainst).toFixed(2);
     r.avgDestFor = r.played ? +(r.destFor / r.played).toFixed(2) : 0;

@@ -25,7 +25,6 @@ export default function Leaderboard() {
         <div className="sub">Win=3 • Draw=1 • Loss=0</div>
       </div>
 
-      {/* Desktop/table */}
       <div className="panel lb-desktop">
         <div className="table-wrap">
           <table className="lb-table">
@@ -60,7 +59,6 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* Mobile/cards */}
       <div className="lb-mobile">
         {rows.map((r, i) => (
           <div className="lb-card" key={r.teamId}>

@@ -6,7 +6,7 @@ export default function Admin() {
   const [teams, setTeams] = React.useState([]);
   const [schedule, setSchedule] = React.useState([]);
   const [formTeam, setFormTeam] = React.useState({ name: '' });
-  const [formMatch, setFormMatch] = React.useState({ homeTeam: '', awayTeam: '', scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2, round: 1, bracketId: 'main' });
+  const [formMatch, setFormMatch] = React.useState({ homeTeam: '', awayTeam: '', scheduledAt: '', stage: 'group', warType: 'regular', size: 15, attacksPerMember: 2, round: 1, bracketId: 'main' });
   const [updateResults, setUpdateResults] = React.useState({});
   const [bracketGen, setBracketGen] = React.useState({ bracketId: 'main', teamIds: [], scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2 });
   const [msg, setMsg] = React.useState('');
@@ -16,25 +16,16 @@ export default function Admin() {
 
   const refresh = React.useCallback(() => {
     Promise.all([api.getTeams(), api.getSchedule()]).then(async ([t, s]) => {
-      setTeams(t);
-      setSchedule(s);
+      setTeams(t); setSchedule(s);
       if (manageTeamId) {
-        try {
-          const full = await api.getTeam(manageTeamId);
-          setManageTeam(full);
-        } catch {
-          setManageTeam(null);
-        }
+        try { setManageTeam(await api.getTeam(manageTeamId)); } catch { setManageTeam(null); }
       }
     }).catch(e => setMsg(e.message));
   }, [manageTeamId]);
 
   React.useEffect(() => { refresh(); }, [refresh]);
 
-  function savePassword() {
-    localStorage.setItem('ADMIN_PASSWORD', password);
-    setMsg('Saved admin password locally.');
-  }
+  function savePassword() { localStorage.setItem('ADMIN_PASSWORD', password); setMsg('Saved admin password locally.'); }
 
   function handleCreateTeam(e) {
     e.preventDefault();
@@ -46,8 +37,8 @@ export default function Admin() {
 
   function handleCreateMatch(e) {
     e.preventDefault();
-    const { homeTeam, awayTeam, scheduledAt, warType, size, attacksPerMember, round, bracketId } = formMatch;
-    api.createMatch({ homeTeam, awayTeam, scheduledAt, warType, size: Number(size), attacksPerMember: Number(attacksPerMember), round: Number(round), bracketId })
+    const { homeTeam, awayTeam, scheduledAt, stage, warType, size, attacksPerMember, round, bracketId } = formMatch;
+    api.createMatch({ homeTeam, awayTeam, scheduledAt, stage, warType, size: Number(size), attacksPerMember: Number(attacksPerMember), round: Number(round), bracketId })
       .then(() => { setMsg('War created'); refresh(); })
       .catch(e => setMsg(e.message));
   }
@@ -55,10 +46,7 @@ export default function Admin() {
   function handleResultChange(id, side, field, value) {
     setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), [side]: { ...((s[id] || {})[side]), [field]: value } } }));
   }
-
-  function handleStatusChange(id, value) {
-    setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), status: value } }));
-  }
+  function handleStatusChange(id, value) { setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), status: value } })); }
 
   function handleUpdateMatch(id) {
     const item = updateResults[id];
@@ -78,61 +66,33 @@ export default function Admin() {
         }
       }
     };
-    api.updateMatch(id, payload)
-      .then(() => { setMsg('War updated'); refresh(); })
-      .catch(e => setMsg(e.message));
+    api.updateMatch(id, payload).then(() => { setMsg('War updated'); refresh(); }).catch(e => setMsg(e.message));
   }
 
   function handleDeleteMatch(id) {
     if (!confirm('Delete this war?')) return;
-    api.deleteMatch(id)
-      .then(() => { setMsg('War deleted'); refresh(); })
-      .catch(e => setMsg(e.message));
+    api.deleteMatch(id).then(() => { setMsg('War deleted'); refresh(); }).catch(e => setMsg(e.message));
   }
 
   function handleDeleteTeam(id) {
     if (!confirm('Delete clan and related wars?')) return;
-    api.deleteTeam(id)
-      .then(() => {
-        setMsg('Clan deleted');
-        if (manageTeamId === id) { setManageTeamId(''); setManageTeam(null); }
-        refresh();
-      })
-      .catch(e => setMsg(e.message));
+    api.deleteTeam(id).then(() => { setMsg('Clan deleted'); if (manageTeamId === id) { setManageTeamId(''); setManageTeam(null); } refresh(); }).catch(e => setMsg(e.message));
   }
 
-  function selectManageTeam(id) {
-    setManageTeamId(id);
-    if (!id) { setManageTeam(null); return; }
-    api.getTeam(id).then(setManageTeam).catch(e => setMsg(e.message));
-  }
-
-  function updateManageTeamField(field, value) {
-    setManageTeam(t => ({ ...(t || {}), [field]: value }));
-  }
-
+  function selectManageTeam(id) { setManageTeamId(id); if (!id) { setManageTeam(null); return; } api.getTeam(id).then(setManageTeam).catch(e => setMsg(e.message)); }
+  function updateManageTeamField(field, value) { setManageTeam(t => ({ ...(t || {}), [field]: value })); }
   function saveManageTeam() {
     if (!manageTeam) return;
-    const payload = {
-      name: manageTeam.name,
-      clanTag: manageTeam.clanTag,
-      level: manageTeam.level,
-      warLeague: manageTeam.warLeague,
-      leader: manageTeam.leader,
-      logoUrl: manageTeam.logoUrl,
-      about: manageTeam.about,
-      group: manageTeam.group,
-      seed: manageTeam.seed
-    };
-    api.updateTeam(manageTeam._id, payload)
-      .then(t => { setManageTeam(t); setMsg('Clan profile updated'); refresh(); })
-      .catch(e => setMsg(e.message));
+    api.updateTeam(manageTeam._id, {
+      name: manageTeam.name, clanTag: manageTeam.clanTag, level: manageTeam.level, warLeague: manageTeam.warLeague,
+      leader: manageTeam.leader, logoUrl: manageTeam.logoUrl, about: manageTeam.about, group: manageTeam.group, seed: manageTeam.seed
+    }).then(t => { setManageTeam(t); setMsg('Clan profile updated'); refresh(); }).catch(e => setMsg(e.message));
   }
 
   function addMember(e) {
     e.preventDefault();
     if (!manageTeam || !newMember.name.trim()) return;
-    const payload = {
+    api.addMember(manageTeam._id, {
       name: newMember.name.trim(),
       role: newMember.role || '',
       thLevel: newMember.thLevel ? Number(newMember.thLevel) : null,
@@ -142,33 +102,17 @@ export default function Admin() {
         gw: newMember.heroes.gw ? Number(newMember.heroes.gw) : 0,
         rc: newMember.heroes.rc ? Number(newMember.heroes.rc) : 0
       }
-    };
-    api.addMember(manageTeam._id, payload)
-      .then(t => { setManageTeam(t); setNewMember({ name: '', role: '', thLevel: '', heroes: { bk: '', aq: '', gw: '', rc: '' } }); setMsg('Member added'); refresh(); })
-      .catch(e => setMsg(e.message));
+    }).then(t => { setManageTeam(t); setNewMember({ name: '', role: '', thLevel: '', heroes: { bk: '', aq: '', gw: '', rc: '' } }); setMsg('Member added'); refresh(); }).catch(e => setMsg(e.message));
   }
 
-  function updateMember(memberId, changes) {
-    if (!manageTeam) return;
-    api.updateMember(manageTeam._id, memberId, changes)
-      .then(t => { setManageTeam(t); setMsg('Member updated'); refresh(); })
-      .catch(e => setMsg(e.message));
-  }
-
-  function deleteMember(memberId) {
-    if (!manageTeam) return;
-    if (!confirm('Delete this member?')) return;
-    api.deleteMember(manageTeam._id, memberId)
-      .then(t => { setManageTeam(t); setMsg('Member deleted'); refresh(); })
-      .catch(e => setMsg(e.message));
-  }
+  function updateMember(memberId, changes) { if (!manageTeam) return; api.updateMember(manageTeam._id, memberId, changes).then(t => { setManageTeam(t); setMsg('Member updated'); refresh(); }).catch(e => setMsg(e.message)); }
+  function deleteMember(memberId) { if (!manageTeam) return; if (!confirm('Delete this member?')) return; api.deleteMember(manageTeam._id, memberId).then(t => { setManageTeam(t); setMsg('Member deleted'); refresh(); }).catch(e => setMsg(e.message)); }
 
   return (
     <div>
       <h1>Admin</h1>
       {msg && <p className="info">{msg}</p>}
 
-      {/* Admin password */}
       <section className="panel">
         <h2>Admin Password</h2>
         <div className="form-row">
@@ -180,7 +124,6 @@ export default function Admin() {
         <small>Stored locally and sent as header x-admin-password</small>
       </section>
 
-      {/* Create clan */}
       <section className="panel">
         <h2>Create Clan</h2>
         <form onSubmit={handleCreateTeam} className="form-row">
@@ -211,7 +154,6 @@ export default function Admin() {
         </div>
       </section>
 
-      {/* Manage selected clan */}
       {manageTeam && (
         <section className="panel">
           <h2>Manage Clan: {manageTeam.name}</h2>
@@ -293,7 +235,7 @@ export default function Admin() {
                     <td><input className="cell-input" type="number" defaultValue={p.stats?.stars ?? 0} onBlur={e => updateMember(p._id, { stats: { stars: Number(e.target.value) } })} /></td>
                     <td><input className="cell-input" type="number" step="0.01" defaultValue={p.stats?.avgStars ?? 0} onBlur={e => updateMember(p._id, { stats: { avgStars: Number(e.target.value) } })} /></td>
                     <td><input className="cell-input" type="number" step="0.01" defaultValue={p.stats?.avgDestruction ?? 0} onBlur={e => updateMember(p._id, { stats: { avgDestruction: Number(e.target.value) } })} /></td>
-                    <td><button className="danger" onClick={() => deleteMember(p._id)}>Delete</button></td>
+                    <td className="table-actions"><button className="danger" onClick={() => deleteMember(p._id)}>Delete</button></td>
                   </tr>
                 ))}
                 {(!manageTeam.members || manageTeam.members.length === 0) && (
@@ -305,7 +247,6 @@ export default function Admin() {
         </section>
       )}
 
-      {/* Create war */}
       <section className="panel">
         <h2>Create War</h2>
         <form onSubmit={handleCreateMatch} className="form-grid-3">
@@ -323,6 +264,12 @@ export default function Admin() {
           </label>
           <label className="label">Date/Time
             <input type="datetime-local" value={formMatch.scheduledAt} onChange={e => setFormMatch({ ...formMatch, scheduledAt: e.target.value })} required />
+          </label>
+          <label className="label">Stage
+            <select value={formMatch.stage} onChange={e => setFormMatch({ ...formMatch, stage: e.target.value })}>
+              <option value="group">group</option>
+              <option value="knockout">knockout</option>
+            </select>
           </label>
           <label className="label">War Type
             <select value={formMatch.warType} onChange={e => setFormMatch({ ...formMatch, warType: e.target.value, attacksPerMember: e.target.value === 'cwl' ? 1 : formMatch.attacksPerMember })}>
@@ -354,20 +301,20 @@ export default function Admin() {
         </form>
       </section>
 
-      {/* Update wars */}
       <section className="panel">
         <h2>Update Wars</h2>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>When</th><th>Type</th><th>Size</th><th>Home</th><th>Home Result</th><th>Away</th><th>Away Result</th><th>Status</th><th>Actions</th>
+                <th>When</th><th>Stage</th><th>Type</th><th>Size</th><th>Home</th><th>Home Result</th><th>Away</th><th>Away Result</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {schedule.map(m => (
                 <tr key={m._id}>
                   <td>{new Date(m.scheduledAt).toLocaleString()}</td>
+                  <td>{m.stage || 'group'}</td>
                   <td>{m.warType}</td>
                   <td>{m.size}v{m.size}</td>
                   <td>{m.homeTeam?.name}</td>
@@ -393,15 +340,12 @@ export default function Admin() {
                   </td>
                 </tr>
               ))}
-              {schedule.length === 0 && (
-                <tr><td colSpan="9">No wars</td></tr>
-              )}
+              {schedule.length === 0 && (<tr><td colSpan="10">No wars</td></tr>)}
             </tbody>
           </table>
         </div>
       </section>
 
-      {/* Generate Round 1 wars */}
       <section className="panel">
         <h2>Generate Bracket (Round 1)</h2>
         <form onSubmit={e => {
@@ -420,7 +364,7 @@ export default function Admin() {
             <input value={bracketGen.bracketId} onChange={e => setBracketGen(s => ({ ...s, bracketId: e.target.value }))} />
           </label>
           <label className="label">War Type
-            <select value={bracketGen.warType} onChange={e => setBracketGen(s => ({ ...s, warType: e.target.value, attacksPerMember: e.target.value === 'cwl' ? 1 : s.attacksPerMember }))}>
+            <select value={bracketGen.warType} onChange={e => setBracketGen(s => ({ ...s, warType: e.target.value }))}>
               <option value="regular">regular</option>
               <option value="friendly">friendly</option>
               <option value="cwl">cwl</option>
