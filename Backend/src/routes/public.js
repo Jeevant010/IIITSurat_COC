@@ -6,19 +6,18 @@ const { computeLeaderboard } = require('../utils/leaderboard');
 const router = express.Router();
 
 function mapPlayersToMembers(players = []) {
-  // Back-compat: convert old "players" into "members"-like objects
   return players.map((p) => ({
     _id: p._id,
     name: p.name,
-    role: p.position || '', // no role in old schema; reuse "position" text if present
-    thLevel: null, // unknown in old data
-    heroes: { bk: 0, aq: 0, gw: 0, rc: 0 },
+    role: p.position || '',
+    thLevel: p.thLevel ?? null,
+    heroes: p.heroes || { bk: 0, aq: 0, gw: 0, rc: 0 },
     stats: {
-      attacks: p.stats?.appearances ?? 0,
-      triples: p.stats?.goals ?? 0, // rough mapping if football data existed
-      stars: p.stats?.goals ?? 0,
-      avgStars: 0,
-      avgDestruction: 0
+      attacks: p.stats?.appearances ?? p.stats?.attacks ?? 0,
+      triples: p.stats?.triples ?? p.stats?.goals ?? 0,
+      stars: p.stats?.stars ?? p.stats?.goals ?? 0,
+      avgStars: p.stats?.avgStars ?? 0,
+      avgDestruction: p.stats?.avgDestruction ?? 0
     }
   }));
 }
@@ -50,7 +49,6 @@ router.get('/teams/:id', async (req, res) => {
     const t = await Team.findById(req.params.id).lean();
     if (!t) return res.status(404).json({ error: 'Clan not found' });
 
-    // Back-compat: if members empty but players exist, synthesize members
     let members = Array.isArray(t.members) ? t.members : [];
     if ((!members || members.length === 0) && Array.isArray(t.players) && t.players.length > 0) {
       members = mapPlayersToMembers(t.players);

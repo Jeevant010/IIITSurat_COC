@@ -68,21 +68,24 @@ export default function Team() {
 
   return (
     <div>
-      <div className="team-header panel">
-        <div className="team-header-left">
-          {team.logoUrl ? <img src={team.logoUrl} alt={`${team.name} badge`} /> : <div className="avatar lg">{team.name.charAt(0)}</div>}
-          <div>
-            <h1>{team.name}</h1>
-            {team.clanTag && <div className="muted">{team.clanTag}</div>}
-            {team.leader && <div className="muted">Leader: {team.leader}</div>}
-            <div className="muted">
-              {team.warLeague && <span className="pill">{team.warLeague}</span>}
-              <span className="pill">Level {team.level ?? '-'}</span>
-              <Link className="pill link" to="/#/schedule">See Schedule</Link>
+      <div className="team-hero">
+        <div className="team-hero-bg" />
+        <div className="team-hero-content">
+          <div className="team-hero-left">
+            {team.logoUrl ? <img src={team.logoUrl} alt={`${team.name} badge`} /> : <div className="avatar lg">{team.name.charAt(0)}</div>}
+            <div>
+              <h1>{team.name}</h1>
+              {team.clanTag && <div className="muted">{team.clanTag}</div>}
+              {team.leader && <div className="muted">Leader: {team.leader}</div>}
+              <div className="muted">
+                {team.warLeague && <span className="pill">{team.warLeague}</span>}
+                <span className="pill">Level {team.level ?? '-'}</span>
+                <Link className="pill link" to="/#/schedule">See Schedule</Link>
+              </div>
             </div>
           </div>
+          {team.about && <p className="team-about">{team.about}</p>}
         </div>
-        {team.about && <p className="team-about">{team.about}</p>}
       </div>
 
       <section className="panel">

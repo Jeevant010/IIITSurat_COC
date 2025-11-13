@@ -25,7 +25,7 @@ export default function Leaderboard() {
         <div className="sub">Win=3 • Draw=1 • Loss=0</div>
       </div>
 
-      {/* Desktop/table layout */}
+      {/* Desktop/table */}
       <div className="panel lb-desktop">
         <div className="table-wrap">
           <table className="lb-table">
@@ -60,7 +60,7 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* Mobile/cards layout */}
+      {/* Mobile/cards */}
       <div className="lb-mobile">
         {rows.map((r, i) => (
           <div className="lb-card" key={r.teamId}>
@@ -81,7 +81,7 @@ export default function Leaderboard() {
             </div>
             <div className="lb-card-prog">
               <div className="muted">Avg Dest%</div>
-              <ProgressBar value={r.avgDestFor} max={100} color="linear-gradient(90deg, #22c55e, #60a5fa)" bg="rgba(255,255,255,.12)" height={10} />
+              <ProgressBar value={r.avgDestFor} max={100} color="linear-gradient(90deg, #ffcf4a, #ffd166)" bg="rgba(255,255,255,.16)" height={10} />
               <div className="muted tiny">Total {r.totalDestruction}% • Win {r.winRate}%</div>
             </div>
           </div>

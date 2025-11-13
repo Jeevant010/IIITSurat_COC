@@ -1,6 +1,6 @@
 import React from 'react';
 import { api } from '../api/client';
-import BracketView from '../components/BracketView.jsx';
+import UEFABracket from '../components/UEFABracket';
 
 export default function Bracket() {
   const [bracketId, setBracketId] = React.useState('main');
@@ -19,9 +19,9 @@ export default function Bracket() {
   React.useEffect(() => { load(); }, [load]);
 
   return (
-    <div>
+    <div className="bracket-page">
       <div className="page-head">
-        <h1>Bracket</h1>
+        <h1>Championship Bracket</h1>
         <div className="row">
           <label>
             Bracket ID:
@@ -32,7 +32,7 @@ export default function Bracket() {
 
       {loading && <p>Loading bracket…</p>}
       {err && <p className="error">{err}</p>}
-      {data && <BracketView rounds={data.rounds} />}
+      {data && <UEFABracket rounds={data.rounds} accent="blue" />}
     </div>
   );
 }
