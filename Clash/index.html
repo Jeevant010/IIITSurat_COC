@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script>
-      // Convert direct links like /teams/:id into hash routes to avoid refresh 404s.
+      // Ensure direct links (e.g., /teams/:id) route to HashRouter before React boots
       (function () {
         try {
           var hasHash = location.hash && location.hash.startsWith('#/');

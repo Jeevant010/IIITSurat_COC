@@ -4,10 +4,9 @@ const Team = require('../models/Team');
 const Match = require('../models/Match');
 
 const router = express.Router();
-
 router.use(adminAuth);
 
-// Clans CRUD
+// Teams
 router.post('/teams', async (req, res) => {
   try {
     const { name, clanTag, level, warLeague, leader, logoUrl, about, group, seed, members } = req.body;
@@ -66,10 +65,10 @@ router.delete('/teams/:id', async (req, res) => {
   }
 });
 
-// Members management
+// Members
 router.post('/teams/:id/members', async (req, res) => {
   try {
-    const { name, role, thLevel, heroes, stats } = req.body;
+    const { name, playerTag, email, townHall, role, stats } = req.body;
     if (!name) return res.status(400).json({ error: 'member name required' });
 
     const team = await Team.findById(req.params.id);
@@ -77,20 +76,17 @@ router.post('/teams/:id/members', async (req, res) => {
 
     team.members.push({
       name,
+      playerTag: playerTag || '',
+      email: email || '',
+      townHall: townHall ?? null,
       role: role || '',
-      thLevel: thLevel ?? null,
-      heroes: {
-        bk: heroes?.bk ?? 0,
-        aq: heroes?.aq ?? 0,
-        gw: heroes?.gw ?? 0,
-        rc: heroes?.rc ?? 0
-      },
       stats: {
         attacks: stats?.attacks ?? 0,
         triples: stats?.triples ?? 0,
         stars: stats?.stars ?? 0,
         avgStars: stats?.avgStars ?? 0,
-        avgDestruction: stats?.avgDestruction ?? 0
+        avgDestruction: stats?.avgDestruction ?? 0,
+        extra: stats?.extra
       }
     });
     await team.save();
@@ -102,7 +98,7 @@ router.post('/teams/:id/members', async (req, res) => {
 
 router.put('/teams/:id/members/:memberId', async (req, res) => {
   try {
-    const { name, role, thLevel, heroes, stats } = req.body;
+    const { name, playerTag, email, townHall, role, stats } = req.body;
     const team = await Team.findById(req.params.id);
     if (!team) return res.status(404).json({ error: 'Clan not found' });
 
@@ -110,20 +106,22 @@ router.put('/teams/:id/members/:memberId', async (req, res) => {
     if (!member) return res.status(404).json({ error: 'Member not found' });
 
     if (name !== undefined) member.name = name;
+    if (playerTag !== undefined) member.playerTag = playerTag;
+    if (email !== undefined) member.email = email;
+    if (townHall !== undefined) member.townHall = townHall;
     if (role !== undefined) member.role = role;
-    if (thLevel !== undefined) member.thLevel = thLevel;
-    if (heroes !== undefined) {
-      member.heroes.bk = heroes.bk ?? member.heroes.bk;
-      member.heroes.aq = heroes.aq ?? member.heroes.aq;
-      member.heroes.gw = heroes.gw ?? member.heroes.gw;
-      member.heroes.rc = heroes.rc ?? member.heroes.rc;
-    }
     if (stats !== undefined) {
       member.stats.attacks = stats.attacks ?? member.stats.attacks;
       member.stats.triples = stats.triples ?? member.stats.triples;
       member.stats.stars = stats.stars ?? member.stats.stars;
       member.stats.avgStars = stats.avgStars ?? member.stats.avgStars;
       member.stats.avgDestruction = stats.avgDestruction ?? member.stats.avgDestruction;
+      if (stats.extra) {
+        member.stats.extra = member.stats.extra || {};
+        for (const [k, v] of Object.entries(stats.extra)) {
+          member.stats.extra.set ? member.stats.extra.set(k, v) : member.stats.extra[k] = v;
+        }
+      }
     }
 
     await team.save();
@@ -149,12 +147,12 @@ router.delete('/teams/:id/members/:memberId', async (req, res) => {
   }
 });
 
-// Wars CRUD
+// Wars CRUD (with stage + expanded warType)
 router.post('/matches', async (req, res) => {
   try {
     const {
       homeTeam, awayTeam, scheduledAt,
-      warType = 'regular', size = 15, attacksPerMember,
+      stage = 'group', warType = 'regular', size = 15, attacksPerMember,
       round = 1, bracketId = 'main'
     } = req.body;
 
@@ -168,6 +166,7 @@ router.post('/matches', async (req, res) => {
       homeTeam,
       awayTeam,
       scheduledAt: new Date(scheduledAt),
+      stage,
       warType,
       size,
       attacksPerMember: apm,
@@ -187,7 +186,7 @@ router.post('/matches', async (req, res) => {
 router.put('/matches/:id', async (req, res) => {
   try {
     const {
-      homeTeam, awayTeam, scheduledAt, warType, size, attacksPerMember,
+      homeTeam, awayTeam, scheduledAt, stage, warType, size, attacksPerMember,
       round, bracketId, status, result
     } = req.body;
 
@@ -195,6 +194,7 @@ router.put('/matches/:id', async (req, res) => {
     if (homeTeam) updates.homeTeam = homeTeam;
     if (awayTeam) updates.awayTeam = awayTeam;
     if (scheduledAt) updates.scheduledAt = new Date(scheduledAt);
+    if (stage) updates.stage = stage;
     if (warType) updates.warType = warType;
     if (size !== undefined) updates.size = size;
     if (attacksPerMember !== undefined) updates.attacksPerMember = attacksPerMember;
@@ -236,10 +236,14 @@ router.delete('/matches/:id', async (req, res) => {
   }
 });
 
-// Bracket generation (pair up clans for Round 1 wars)
+// Bracket generation: set stage explicitly (default eliminator)
 router.post('/bracket/generate', async (req, res) => {
   try {
-    const { bracketId = 'main', teamIds = [], scheduledAt, round = 1, warType = 'regular', size = 15, attacksPerMember } = req.body;
+    const {
+      bracketId = 'main', teamIds = [], scheduledAt,
+      round = 1, stage = 'eliminator', warType = 'regular', size = 15, attacksPerMember
+    } = req.body;
+
     if (!Array.isArray(teamIds) || teamIds.length < 2) {
       return res.status(400).json({ error: 'teamIds array of length >= 2 required' });
     }
@@ -260,6 +264,7 @@ router.post('/bracket/generate', async (req, res) => {
           homeTeam: p.home,
           awayTeam: p.away,
           scheduledAt: new Date(scheduledAt),
+          stage,
           warType,
           size,
           attacksPerMember: apm,

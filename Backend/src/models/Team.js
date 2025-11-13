@@ -1,23 +1,22 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+// Member (player) per your request; no hero levels
 const MemberSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
+    playerTag: { type: String, default: '' },   // e.g., #ABC123
+    email: { type: String, default: '' },
+    townHall: { type: Number, default: null },
     role: { type: String, enum: ['Leader', 'Co-Leader', 'Elder', 'Member', ''], default: '' },
-    thLevel: { type: Number, default: null },
-    heroes: {
-      bk: { type: Number, default: 0 }, // Barbarian King
-      aq: { type: Number, default: 0 }, // Archer Queen
-      gw: { type: Number, default: 0 }, // Grand Warden
-      rc: { type: Number, default: 0 }  // Royal Champion
-    },
     stats: {
       attacks: { type: Number, default: 0 },
       triples: { type: Number, default: 0 },
       stars: { type: Number, default: 0 },
       avgStars: { type: Number, default: 0 },
-      avgDestruction: { type: Number, default: 0 }
+      avgDestruction: { type: Number, default: 0 },
+      // allow adding more stats later without schema changes
+      extra: { type: Map, of: Number, default: undefined }
     }
   },
   { _id: true }
@@ -26,15 +25,19 @@ const MemberSchema = new Schema(
 const TeamSchema = new Schema(
   {
     name: { type: String, required: true, unique: true, trim: true },
-    clanTag: { type: String, default: '' }, // e.g., #ABC123
-    level: { type: Number, default: null }, // clan level
+    clanTag: { type: String, default: '' },
+    level: { type: Number, default: null },
     warLeague: { type: String, default: '' },
     leader: { type: String, default: '' },
-    logoUrl: { type: String, default: '' }, // clan badge
+    logoUrl: { type: String, default: '' },
     about: { type: String, default: '' },
-    group: { type: String, default: null },
+    group: { type: String, default: null }, // group code for group stage tables (optional)
     seed: { type: Number, default: null },
-    members: { type: [MemberSchema], default: [] }
+
+    members: { type: [MemberSchema], default: [] },
+
+    // legacy back-compat field (if older docs still hold "players")
+    players: { type: Array, default: undefined }
   },
   { timestamps: true }
 );

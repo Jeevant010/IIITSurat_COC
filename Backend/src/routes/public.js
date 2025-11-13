@@ -5,24 +5,27 @@ const { computeLeaderboard } = require('../utils/leaderboard');
 
 const router = express.Router();
 
+// Map old "players" to new "members" if legacy docs exist
 function mapPlayersToMembers(players = []) {
   return players.map((p) => ({
     _id: p._id,
     name: p.name,
-    role: p.position || '',
-    thLevel: p.thLevel ?? null,
-    heroes: p.heroes || { bk: 0, aq: 0, gw: 0, rc: 0 },
+    playerTag: p.playerTag || p.tag || '',
+    email: p.email || '',
+    townHall: p.townHall ?? p.thLevel ?? null,
+    role: p.role || p.position || '',
     stats: {
-      attacks: p.stats?.appearances ?? p.stats?.attacks ?? 0,
+      attacks: p.stats?.attacks ?? p.stats?.appearances ?? 0,
       triples: p.stats?.triples ?? p.stats?.goals ?? 0,
       stars: p.stats?.stars ?? p.stats?.goals ?? 0,
       avgStars: p.stats?.avgStars ?? 0,
-      avgDestruction: p.stats?.avgDestruction ?? 0
+      avgDestruction: p.stats?.avgDestruction ?? 0,
+      extra: p.stats?.extra
     }
   }));
 }
 
-// Clans list
+// Clans list (lightweight + member counts)
 router.get('/teams', async (req, res) => {
   try {
     const teams = await Team.find(
@@ -41,11 +44,12 @@ router.get('/teams', async (req, res) => {
   }
 });
 
-// Clan details (+fallback)
+// Clan details (members always in new shape)
 router.get('/teams/:id', async (req, res) => {
   try {
     const t = await Team.findById(req.params.id).lean();
     if (!t) return res.status(404).json({ error: 'Clan not found' });
+
     let members = Array.isArray(t.members) ? t.members : [];
     if ((!members || members.length === 0) && Array.isArray(t.players) && t.players.length > 0) {
       members = mapPlayersToMembers(t.players);
@@ -56,7 +60,7 @@ router.get('/teams/:id', async (req, res) => {
   }
 });
 
-// Schedule (all wars)
+// All wars (stage + warType visible)
 router.get('/schedule', async (req, res) => {
   try {
     const matches = await Match.find()
@@ -69,7 +73,7 @@ router.get('/schedule', async (req, res) => {
   }
 });
 
-// Leaderboard (all completed)
+// Overall leaderboard (completed)
 router.get('/leaderboard', async (req, res) => {
   try {
     const teams = await Team.find();
@@ -84,7 +88,7 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
-// Group standings (completed group-stage only)
+// Group standings (completed group stage)
 router.get('/group-standings', async (req, res) => {
   try {
     const teams = await Team.find().lean();
@@ -92,14 +96,13 @@ router.get('/group-standings', async (req, res) => {
       .populate('homeTeam', 'name')
       .populate('awayTeam', 'name');
 
-    const byId = new Map(teams.map(t => [String(t._id), t]));
     const groups = new Map();
-    // gather teams by group
     for (const t of teams) {
       const g = t.group || 'UNGROUPED';
       if (!groups.has(g)) groups.set(g, []);
       groups.get(g).push(t);
     }
+
     const result = [];
     for (const [group, members] of groups.entries()) {
       const mset = matches.filter(m =>
@@ -109,7 +112,7 @@ router.get('/group-standings', async (req, res) => {
       const board = computeLeaderboard(members, mset);
       result.push({ group, table: board });
     }
-    // sort groups by name
+
     result.sort((a, b) => a.group.localeCompare(b.group));
     res.json(result);
   } catch (e) {
@@ -117,11 +120,11 @@ router.get('/group-standings', async (req, res) => {
   }
 });
 
-// Bracket (knockout) by rounds
+// Knockout bracket (everything not group)
 router.get('/bracket', async (req, res) => {
   try {
     const bracketId = req.query.bracketId || 'main';
-    const matches = await Match.find({ bracketId, stage: 'knockout' })
+    const matches = await Match.find({ bracketId, stage: { $ne: 'group' } })
       .populate('homeTeam', 'name')
       .populate('awayTeam', 'name')
       .sort({ round: 1, scheduledAt: 1, createdAt: 1 });

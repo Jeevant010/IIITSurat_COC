@@ -2,9 +2,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api/client';
 
-function fmt(dt) {
-  try { return new Date(dt).toLocaleString(); } catch { return dt; }
-}
+function fmt(dt) { try { return new Date(dt).toLocaleString(); } catch { return dt; } }
 
 function computeClanStats(teamId, matches) {
   const stats = { played: 0, wins: 0, draws: 0, losses: 0, starsFor: 0, starsAgainst: 0, starsDiff: 0, destFor: 0, destAgainst: 0, destDiff: 0, avgDestFor: 0, points: 0 };
@@ -13,28 +11,18 @@ function computeClanStats(teamId, matches) {
     const isAway = String(m.awayTeam?._id || m.awayTeam) === teamId;
     if (!isHome && !isAway) continue;
     if (m.status !== 'completed') continue;
-
     const hs = Number(m.result?.home?.stars ?? 0);
     const as = Number(m.result?.away?.stars ?? 0);
     const hd = Number(m.result?.home?.destruction ?? 0);
     const ad = Number(m.result?.away?.destruction ?? 0);
-
     const ours = isHome ? { s: hs, d: hd } : { s: as, d: ad };
     const theirs = isHome ? { s: as, d: ad } : { s: hs, d: hd };
-
     stats.played += 1;
-    stats.starsFor += ours.s;
-    stats.starsAgainst += theirs.s;
-    stats.destFor += ours.d;
-    stats.destAgainst += theirs.d;
-
-    if (ours.s > theirs.s) { stats.wins += 1; stats.points += 3; }
-    else if (ours.s < theirs.s) { stats.losses += 1; }
-    else {
-      if (ours.d > theirs.d) { stats.wins += 1; stats.points += 3; }
-      else if (ours.d < theirs.d) { stats.losses += 1; }
-      else { stats.draws += 1; stats.points += 1; }
-    }
+    stats.starsFor += ours.s; stats.starsAgainst += theirs.s;
+    stats.destFor += ours.d; stats.destAgainst += theirs.d;
+    if (ours.s > theirs.s) { stats.wins++; stats.points += 3; }
+    else if (ours.s < theirs.s) { stats.losses++; }
+    else { if (ours.d > theirs.d) { stats.wins++; stats.points += 3; } else if (ours.d < theirs.d) { stats.losses++; } else { stats.draws++; stats.points += 1; } }
   }
   stats.starsDiff = stats.starsFor - stats.starsAgainst;
   stats.destDiff = stats.destFor - stats.destAgainst;
@@ -109,8 +97,7 @@ export default function Team() {
           <table>
             <thead>
               <tr>
-                <th>Name</th><th>Role</th><th>TH</th>
-                <th>BK</th><th>AQ</th><th>GW</th><th>RC</th>
+                <th>Name</th><th>Player Tag</th><th>Email</th><th>Role</th><th>TH</th>
                 <th>Att</th><th>3*</th><th>Stars</th><th>Avg*</th><th>Avg%</th>
               </tr>
             </thead>
@@ -118,12 +105,10 @@ export default function Team() {
               {Array.isArray(members) && members.length > 0 ? members.map((p, idx) => (
                 <tr key={p._id || `${p.name}-${idx}`}>
                   <td>{p.name}</td>
+                  <td>{p.playerTag || p.tag || '-'}</td>
+                  <td>{p.email || '-'}</td>
                   <td>{p.role || p.position || '-'}</td>
-                  <td>{p.thLevel ?? '-'}</td>
-                  <td>{p.heroes?.bk ?? 0}</td>
-                  <td>{p.heroes?.aq ?? 0}</td>
-                  <td>{p.heroes?.gw ?? 0}</td>
-                  <td>{p.heroes?.rc ?? 0}</td>
+                  <td>{p.townHall ?? p.thLevel ?? '-'}</td>
                   <td>{p.stats?.attacks ?? p.stats?.appearances ?? 0}</td>
                   <td>{p.stats?.triples ?? p.stats?.goals ?? 0}</td>
                   <td>{p.stats?.stars ?? p.stats?.goals ?? 0}</td>
@@ -131,7 +116,7 @@ export default function Team() {
                   <td>{p.stats?.avgDestruction ?? 0}%</td>
                 </tr>
               )) : (
-                <tr><td colSpan="12" className="muted">No members yet</td></tr>
+                <tr><td colSpan="10" className="muted">No members yet</td></tr>
               )}
             </tbody>
           </table>
@@ -144,7 +129,7 @@ export default function Team() {
           {recent.map(m => (
             <div key={m._id} className={`card ${m.status}`}>
               <div className="card-title">
-                Round {m.round} • {fmt(m.scheduledAt)} • {m.bracketId} • {m.warType.toUpperCase()} {m.size}v{m.size}
+                {m.stage?.toUpperCase()} • Round {m.round} • {fmt(m.scheduledAt)} • {m.bracketId} • {m.warType.toUpperCase()} {m.size}v{m.size}
               </div>
               <div className="card-body">
                 <div className="match-row">

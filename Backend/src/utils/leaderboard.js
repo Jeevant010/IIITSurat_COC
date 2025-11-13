@@ -1,4 +1,4 @@
-// Clash wars leaderboard with richer stats
+// Clash wars leaderboard with rich stats
 // Win=3, Draw=1, Loss=0. Tie-breaks: Stars Diff, Avg Destruction, Avg Stars, Name.
 function computeLeaderboard(teams, matches) {
   const table = new Map();

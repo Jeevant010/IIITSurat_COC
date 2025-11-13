@@ -10,20 +10,32 @@ const SideResultSchema = new Schema(
   { _id: false }
 );
 
+// Tournament stages per your format
+const STAGES = ['group', 'eliminator', 'quarterfinal', 'semifinal', 'final'];
+
+// War types (normal CoC + esports + legend)
+const WAR_TYPES = ['regular', 'friendly', 'cwl', 'esports', 'legend'];
+
 const MatchSchema = new Schema(
   {
     homeTeam: { type: Schema.Types.ObjectId, ref: 'Team', required: true },
     awayTeam: { type: Schema.Types.ObjectId, ref: 'Team', required: true },
     scheduledAt: { type: Date, required: true },
     status: { type: String, enum: ['scheduled', 'in-progress', 'completed'], default: 'scheduled' },
-    stage: { type: String, enum: ['group', 'knockout'], default: 'group', index: true }, // NEW: group vs playoff
-    warType: { type: String, enum: ['friendly', 'regular', 'cwl'], default: 'regular' },
+
+    // REQUIRED: stage is explicit (no generic "knockout")
+    stage: { type: String, enum: STAGES, default: 'group', index: true },
+
+    warType: { type: String, enum: WAR_TYPES, default: 'regular' },
     size: { type: Number, enum: [5, 10, 15, 20, 30, 50], default: 15 },
     attacksPerMember: { type: Number, enum: [1, 2], default: 2 },
+
     result: {
       home: { type: SideResultSchema, default: () => ({}) },
       away: { type: SideResultSchema, default: () => ({}) }
     },
+
+    // ordering for brackets
     round: { type: Number, default: 1 },
     bracketId: { type: String, default: 'main', index: true }
   },

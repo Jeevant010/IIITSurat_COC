@@ -6,17 +6,26 @@ export default function Admin() {
   const [teams, setTeams] = React.useState([]);
   const [schedule, setSchedule] = React.useState([]);
   const [formTeam, setFormTeam] = React.useState({ name: '' });
-  const [formMatch, setFormMatch] = React.useState({ homeTeam: '', awayTeam: '', scheduledAt: '', stage: 'group', warType: 'regular', size: 15, attacksPerMember: 2, round: 1, bracketId: 'main' });
+
+  // War creation form supports new stage + war types
+  const [formMatch, setFormMatch] = React.useState({
+    homeTeam: '', awayTeam: '', scheduledAt: '',
+    stage: 'group', warType: 'regular', size: 15, attacksPerMember: 2, round: 1, bracketId: 'main'
+  });
+
   const [updateResults, setUpdateResults] = React.useState({});
-  const [bracketGen, setBracketGen] = React.useState({ bracketId: 'main', teamIds: [], scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2 });
+  const [bracketGen, setBracketGen] = React.useState({ bracketId: 'main', teamIds: [], scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2, stage: 'eliminator' });
   const [msg, setMsg] = React.useState('');
   const [manageTeamId, setManageTeamId] = React.useState('');
   const [manageTeam, setManageTeam] = React.useState(null);
-  const [newMember, setNewMember] = React.useState({ name: '', role: '', thLevel: '', heroes: { bk: '', aq: '', gw: '', rc: '' } });
+
+  // New member shape (no heroes)
+  const [newMember, setNewMember] = React.useState({ name: '', playerTag: '', email: '', townHall: '', role: '' });
 
   const refresh = React.useCallback(() => {
     Promise.all([api.getTeams(), api.getSchedule()]).then(async ([t, s]) => {
-      setTeams(t); setSchedule(s);
+      setTeams(t);
+      setSchedule(s);
       if (manageTeamId) {
         try { setManageTeam(await api.getTeam(manageTeamId)); } catch { setManageTeam(null); }
       }
@@ -81,6 +90,7 @@ export default function Admin() {
 
   function selectManageTeam(id) { setManageTeamId(id); if (!id) { setManageTeam(null); return; } api.getTeam(id).then(setManageTeam).catch(e => setMsg(e.message)); }
   function updateManageTeamField(field, value) { setManageTeam(t => ({ ...(t || {}), [field]: value })); }
+
   function saveManageTeam() {
     if (!manageTeam) return;
     api.updateTeam(manageTeam._id, {
@@ -94,15 +104,15 @@ export default function Admin() {
     if (!manageTeam || !newMember.name.trim()) return;
     api.addMember(manageTeam._id, {
       name: newMember.name.trim(),
-      role: newMember.role || '',
-      thLevel: newMember.thLevel ? Number(newMember.thLevel) : null,
-      heroes: {
-        bk: newMember.heroes.bk ? Number(newMember.heroes.bk) : 0,
-        aq: newMember.heroes.aq ? Number(newMember.heroes.aq) : 0,
-        gw: newMember.heroes.gw ? Number(newMember.heroes.gw) : 0,
-        rc: newMember.heroes.rc ? Number(newMember.heroes.rc) : 0
-      }
-    }).then(t => { setManageTeam(t); setNewMember({ name: '', role: '', thLevel: '', heroes: { bk: '', aq: '', gw: '', rc: '' } }); setMsg('Member added'); refresh(); }).catch(e => setMsg(e.message));
+      playerTag: newMember.playerTag || '',
+      email: newMember.email || '',
+      townHall: newMember.townHall ? Number(newMember.townHall) : null,
+      role: newMember.role || ''
+    }).then(t => {
+      setManageTeam(t);
+      setNewMember({ name: '', playerTag: '', email: '', townHall: '', role: '' });
+      setMsg('Member added'); refresh();
+    }).catch(e => setMsg(e.message));
   }
 
   function updateMember(memberId, changes) { if (!manageTeam) return; api.updateMember(manageTeam._id, memberId, changes).then(t => { setManageTeam(t); setMsg('Member updated'); refresh(); }).catch(e => setMsg(e.message)); }
@@ -187,6 +197,9 @@ export default function Admin() {
           <h3>Members</h3>
           <form onSubmit={addMember} className="form-grid-2">
             <label className="label">Name<input value={newMember.name} onChange={e => setNewMember(p => ({ ...p, name: e.target.value }))} required /></label>
+            <label className="label">Player Tag<input value={newMember.playerTag} onChange={e => setNewMember(p => ({ ...p, playerTag: e.target.value }))} /></label>
+            <label className="label">Email<input type="email" value={newMember.email} onChange={e => setNewMember(p => ({ ...p, email: e.target.value }))} /></label>
+            <label className="label">Town Hall<input type="number" value={newMember.townHall} onChange={e => setNewMember(p => ({ ...p, townHall: e.target.value }))} /></label>
             <label className="label">Role
               <select value={newMember.role} onChange={e => setNewMember(p => ({ ...p, role: e.target.value }))}>
                 <option value="">Member</option>
@@ -195,11 +208,6 @@ export default function Admin() {
                 <option value="Elder">Elder</option>
               </select>
             </label>
-            <label className="label">Town Hall<input type="number" value={newMember.thLevel} onChange={e => setNewMember(p => ({ ...p, thLevel: e.target.value }))} /></label>
-            <label className="label">BK<input type="number" value={newMember.heroes.bk} onChange={e => setNewMember(p => ({ ...p, heroes: { ...p.heroes, bk: e.target.value } }))} /></label>
-            <label className="label">AQ<input type="number" value={newMember.heroes.aq} onChange={e => setNewMember(p => ({ ...p, heroes: { ...p.heroes, aq: e.target.value } }))} /></label>
-            <label className="label">GW<input type="number" value={newMember.heroes.gw} onChange={e => setNewMember(p => ({ ...p, heroes: { ...p.heroes, gw: e.target.value } }))} /></label>
-            <label className="label">RC<input type="number" value={newMember.heroes.rc} onChange={e => setNewMember(p => ({ ...p, heroes: { ...p.heroes, rc: e.target.value } }))} /></label>
             <div className="right">
               <button type="submit" className="btn-lg">Add Member</button>
             </div>
@@ -209,7 +217,7 @@ export default function Admin() {
             <table>
               <thead>
                 <tr>
-                  <th>Name</th><th>Role</th><th>TH</th><th>BK</th><th>AQ</th><th>GW</th><th>RC</th>
+                  <th>Name</th><th>Tag</th><th>Email</th><th>Role</th><th>TH</th>
                   <th>Att</th><th>3*</th><th>Stars</th><th>Avg*</th><th>Avg%</th><th>Actions</th>
                 </tr>
               </thead>
@@ -217,6 +225,8 @@ export default function Admin() {
                 {manageTeam.members?.map(p => (
                   <tr key={p._id}>
                     <td><input className="cell-input" defaultValue={p.name} onBlur={e => updateMember(p._id, { name: e.target.value })} /></td>
+                    <td><input className="cell-input" defaultValue={p.playerTag || ''} onBlur={e => updateMember(p._id, { playerTag: e.target.value })} /></td>
+                    <td><input className="cell-input" type="email" defaultValue={p.email || ''} onBlur={e => updateMember(p._id, { email: e.target.value })} /></td>
                     <td>
                       <select defaultValue={p.role || ''} onChange={e => updateMember(p._id, { role: e.target.value })}>
                         <option value="">Member</option>
@@ -225,11 +235,7 @@ export default function Admin() {
                         <option value="Elder">Elder</option>
                       </select>
                     </td>
-                    <td><input className="cell-input" type="number" defaultValue={p.thLevel ?? ''} onBlur={e => updateMember(p._id, { thLevel: e.target.value ? Number(e.target.value) : null })} /></td>
-                    <td><input className="cell-input" type="number" defaultValue={p.heroes?.bk ?? 0} onBlur={e => updateMember(p._id, { heroes: { bk: Number(e.target.value) } })} /></td>
-                    <td><input className="cell-input" type="number" defaultValue={p.heroes?.aq ?? 0} onBlur={e => updateMember(p._id, { heroes: { aq: Number(e.target.value) } })} /></td>
-                    <td><input className="cell-input" type="number" defaultValue={p.heroes?.gw ?? 0} onBlur={e => updateMember(p._id, { heroes: { gw: Number(e.target.value) } })} /></td>
-                    <td><input className="cell-input" type="number" defaultValue={p.heroes?.rc ?? 0} onBlur={e => updateMember(p._id, { heroes: { rc: Number(e.target.value) } })} /></td>
+                    <td><input className="cell-input" type="number" defaultValue={p.townHall ?? ''} onBlur={e => updateMember(p._id, { townHall: e.target.value ? Number(e.target.value) : null })} /></td>
                     <td><input className="cell-input" type="number" defaultValue={p.stats?.attacks ?? 0} onBlur={e => updateMember(p._id, { stats: { attacks: Number(e.target.value) } })} /></td>
                     <td><input className="cell-input" type="number" defaultValue={p.stats?.triples ?? 0} onBlur={e => updateMember(p._id, { stats: { triples: Number(e.target.value) } })} /></td>
                     <td><input className="cell-input" type="number" defaultValue={p.stats?.stars ?? 0} onBlur={e => updateMember(p._id, { stats: { stars: Number(e.target.value) } })} /></td>
@@ -239,7 +245,7 @@ export default function Admin() {
                   </tr>
                 ))}
                 {(!manageTeam.members || manageTeam.members.length === 0) && (
-                  <tr><td colSpan="13" className="muted">No members yet</td></tr>
+                  <tr><td colSpan="11" className="muted">No members yet</td></tr>
                 )}
               </tbody>
             </table>
@@ -268,7 +274,10 @@ export default function Admin() {
           <label className="label">Stage
             <select value={formMatch.stage} onChange={e => setFormMatch({ ...formMatch, stage: e.target.value })}>
               <option value="group">group</option>
-              <option value="knockout">knockout</option>
+              <option value="eliminator">eliminator</option>
+              <option value="quarterfinal">quarterfinal</option>
+              <option value="semifinal">semifinal</option>
+              <option value="final">final</option>
             </select>
           </label>
           <label className="label">War Type
@@ -276,6 +285,8 @@ export default function Admin() {
               <option value="regular">regular</option>
               <option value="friendly">friendly</option>
               <option value="cwl">cwl</option>
+              <option value="esports">esports</option>
+              <option value="legend">legend</option>
             </select>
           </label>
           <label className="label">Size
@@ -357,17 +368,28 @@ export default function Admin() {
             scheduledAt: bracketGen.scheduledAt,
             warType: bracketGen.warType,
             size: Number(bracketGen.size),
-            attacksPerMember: Number(bracketGen.attacksPerMember)
+            attacksPerMember: Number(bracketGen.attacksPerMember),
+            stage: bracketGen.stage
           }).then(r => { setMsg(`Generated ${r.count} wars`); refresh(); }).catch(e => setMsg(e.message));
         }} className="form-grid-3">
           <label className="label">Bracket ID
             <input value={bracketGen.bracketId} onChange={e => setBracketGen(s => ({ ...s, bracketId: e.target.value }))} />
+          </label>
+          <label className="label">Stage
+            <select value={bracketGen.stage} onChange={e => setBracketGen(s => ({ ...s, stage: e.target.value }))}>
+              <option value="eliminator">eliminator</option>
+              <option value="quarterfinal">quarterfinal</option>
+              <option value="semifinal">semifinal</option>
+              <option value="final">final</option>
+            </select>
           </label>
           <label className="label">War Type
             <select value={bracketGen.warType} onChange={e => setBracketGen(s => ({ ...s, warType: e.target.value }))}>
               <option value="regular">regular</option>
               <option value="friendly">friendly</option>
               <option value="cwl">cwl</option>
+              <option value="esports">esports</option>
+              <option value="legend">legend</option>
             </select>
           </label>
           <label className="label">Size

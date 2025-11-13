@@ -8,10 +8,7 @@ export default function Teams() {
   const [err, setErr] = React.useState('');
 
   React.useEffect(() => {
-    api.getTeams()
-      .then(setTeams)
-      .catch(e => setErr(e.message))
-      .finally(() => setLoading(false));
+    api.getTeams().then(setTeams).catch(e => setErr(e.message)).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <p>Loading clans…</p>;
@@ -27,7 +24,7 @@ export default function Teams() {
               {t.logoUrl ? <img src={t.logoUrl} alt={`${t.name} badge`} /> : <div className="avatar">{t.name.charAt(0)}</div>}
               <div>
                 <div className="team-name">{t.name}</div>
-                <div className="muted">{t.clanTag || ''}</div>
+                {t.clanTag ? <div className="muted">{t.clanTag}</div> : null}
                 {t.leader ? <div className="muted">Leader: {t.leader}</div> : null}
               </div>
             </div>

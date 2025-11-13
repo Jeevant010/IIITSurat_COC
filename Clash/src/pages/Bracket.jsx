@@ -1,6 +1,6 @@
 import React from 'react';
 import { api } from '../api/client';
-import UEFABracket from '../components/UEFABracket';
+import UEFABracket from '../components/UEFABracket.jsx';
 
 export default function Bracket() {
   const [bracketId, setBracketId] = React.useState('main');

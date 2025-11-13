@@ -8,10 +8,7 @@ export default function Groups() {
   const [err, setErr] = React.useState('');
 
   React.useEffect(() => {
-    api.getGroupStandings()
-      .then(setGroups)
-      .catch(e => setErr(e.message))
-      .finally(() => setLoading(false));
+    api.getGroupStandings().then(setGroups).catch(e => setErr(e.message)).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <p>Loading groups…</p>;
@@ -21,7 +18,7 @@ export default function Groups() {
     <div>
       <div className="page-head">
         <h1>Group Stage</h1>
-        <div className="sub">Standings by group (completed group matches)</div>
+        <div className="sub">Standings from completed group matches</div>
       </div>
       {groups.map(g => (
         <section key={g.group} className="panel">

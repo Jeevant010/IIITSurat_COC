@@ -9,10 +9,7 @@ export default function Leaderboard() {
   const [err, setErr] = React.useState('');
 
   React.useEffect(() => {
-    api.getLeaderboard()
-      .then(setRows)
-      .catch(e => setErr(e.message))
-      .finally(() => setLoading(false));
+    api.getLeaderboard().then(setRows).catch(e => setErr(e.message)).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <p>Loading leaderboard…</p>;
@@ -30,13 +27,11 @@ export default function Leaderboard() {
           <table className="lb-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Clan</th>
+                <th>#</th><th>Clan</th>
                 <th>P</th><th>W</th><th>D</th><th>L</th>
                 <th>⭐ Total</th><th>⭐ Diff</th><th>Avg ⭐</th>
                 <th>Dest% Total</th><th>Dest% Avg</th>
-                <th>Win%</th>
-                <th>Pts</th>
+                <th>Win%</th><th>Pts</th>
               </tr>
             </thead>
             <tbody>
@@ -79,7 +74,7 @@ export default function Leaderboard() {
             </div>
             <div className="lb-card-prog">
               <div className="muted">Avg Dest%</div>
-              <ProgressBar value={r.avgDestFor} max={100} color="linear-gradient(90deg, #ffd166, #ffc445)" bg="rgba(255,255,255,.18)" height={10} />
+              <ProgressBar value={r.avgDestFor} max={100} />
               <div className="muted tiny">Total {r.totalDestruction}% • Win {r.winRate}%</div>
             </div>
           </div>
