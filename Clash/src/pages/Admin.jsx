@@ -7,25 +7,31 @@ export default function Admin() {
   const [schedule, setSchedule] = React.useState([]);
   const [formTeam, setFormTeam] = React.useState({ name: '' });
 
-  // War creation form supports new stage + war types
   const [formMatch, setFormMatch] = React.useState({
     homeTeam: '', awayTeam: '', scheduledAt: '',
     stage: 'group', warType: 'regular', size: 15, attacksPerMember: 2, round: 1, bracketId: 'main'
   });
 
   const [updateResults, setUpdateResults] = React.useState({});
-  const [bracketGen, setBracketGen] = React.useState({ bracketId: 'main', teamIds: [], scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2, stage: 'eliminator' });
   const [msg, setMsg] = React.useState('');
   const [manageTeamId, setManageTeamId] = React.useState('');
   const [manageTeam, setManageTeam] = React.useState(null);
-
-  // New member shape (no heroes)
   const [newMember, setNewMember] = React.useState({ name: '', playerTag: '', email: '', townHall: '', role: '' });
+
+  // Tournament UI state
+  const [groupGen, setGroupGen] = React.useState({
+    group: 'A', bracketId: 'main', teamIds: [], scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2
+  });
+  const [seedForm, setSeedForm] = React.useState({
+    group: 'A', bracketId: 'main', scheduledAtSemi1: '', scheduledAtElim: '', warType: 'regular', size: 15, attacksPerMember: 2
+  });
+  const [advanceForm, setAdvanceForm] = React.useState({
+    bracketId: 'main', scheduledAtSemi2: '', scheduledAtFinal: '', warType: 'regular', size: 15, attacksPerMember: 2
+  });
 
   const refresh = React.useCallback(() => {
     Promise.all([api.getTeams(), api.getSchedule()]).then(async ([t, s]) => {
-      setTeams(t);
-      setSchedule(s);
+      setTeams(t); setSchedule(s);
       if (manageTeamId) {
         try { setManageTeam(await api.getTeam(manageTeamId)); } catch { setManageTeam(null); }
       }
@@ -116,6 +122,7 @@ export default function Admin() {
   }
 
   function updateMember(memberId, changes) { if (!manageTeam) return; api.updateMember(manageTeam._id, memberId, changes).then(t => { setManageTeam(t); setMsg('Member updated'); refresh(); }).catch(e => setMsg(e.message)); }
+
   function deleteMember(memberId) { if (!manageTeam) return; if (!confirm('Delete this member?')) return; api.deleteMember(manageTeam._id, memberId).then(t => { setManageTeam(t); setMsg('Member deleted'); refresh(); }).catch(e => setMsg(e.message)); }
 
   return (
@@ -123,6 +130,7 @@ export default function Admin() {
       <h1>Admin</h1>
       {msg && <p className="info">{msg}</p>}
 
+      {/* Admin Password */}
       <section className="panel">
         <h2>Admin Password</h2>
         <div className="form-row">
@@ -134,6 +142,7 @@ export default function Admin() {
         <small>Stored locally and sent as header x-admin-password</small>
       </section>
 
+      {/* Create Clan */}
       <section className="panel">
         <h2>Create Clan</h2>
         <form onSubmit={handleCreateTeam} className="form-row">
@@ -164,6 +173,7 @@ export default function Admin() {
         </div>
       </section>
 
+      {/* Manage selected clan */}
       {manageTeam && (
         <section className="panel">
           <h2>Manage Clan: {manageTeam.name}</h2>
@@ -253,6 +263,7 @@ export default function Admin() {
         </section>
       )}
 
+      {/* Create War (manual) */}
       <section className="panel">
         <h2>Create War</h2>
         <form onSubmit={handleCreateMatch} className="form-grid-3">
@@ -312,6 +323,191 @@ export default function Admin() {
         </form>
       </section>
 
+      {/* NEW: Generate Group Stage (4 teams → 6 matches) */}
+      <section className="panel">
+        <h2>Generate Group Stage (4 Teams)</h2>
+        <div className="form-grid-3">
+          <label className="label">Group Code
+            <input value={groupGen.group} onChange={e => setGroupGen(s => ({ ...s, group: e.target.value }))} />
+          </label>
+          <label className="label">Bracket ID
+            <input value={groupGen.bracketId} onChange={e => setGroupGen(s => ({ ...s, bracketId: e.target.value }))} />
+          </label>
+          <label className="label">Date/Time (all 6)
+            <input type="datetime-local" value={groupGen.scheduledAt} onChange={e => setGroupGen(s => ({ ...s, scheduledAt: e.target.value }))} />
+          </label>
+          <label className="label">War Type
+            <select value={groupGen.warType} onChange={e => setGroupGen(s => ({ ...s, warType: e.target.value }))}>
+              <option value="regular">regular</option>
+              <option value="friendly">friendly</option>
+              <option value="cwl">cwl</option>
+              <option value="esports">esports</option>
+              <option value="legend">legend</option>
+            </select>
+          </label>
+          <label className="label">Size
+            <select value={groupGen.size} onChange={e => setGroupGen(s => ({ ...s, size: Number(e.target.value) }))}>
+              {[5,10,15,20,30,50].map(n => <option key={n} value={n}>{n}v{n}</option>)}
+            </select>
+          </label>
+          <label className="label">Attacks/Member
+            <select value={groupGen.attacksPerMember} onChange={e => setGroupGen(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+            </select>
+          </label>
+
+          <div className="col-span-3">
+            <strong>Select exactly 4 teams:</strong>
+            <div className="chips">
+              {teams.map(t => {
+                const selected = groupGen.teamIds.includes(t._id);
+                return (
+                  <button
+                    type="button"
+                    key={t._id}
+                    className={`chip ${selected ? 'selected' : ''}`}
+                    onClick={() => {
+                      setGroupGen(s => {
+                        const exists = s.teamIds.includes(t._id);
+                        const next = exists ? s.teamIds.filter(id => id !== t._id) : [...s.teamIds, t._id];
+                        return { ...s, teamIds: next.slice(0, 4) };
+                      });
+                    }}
+                  >
+                    {t.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="right">
+            <button
+              className="btn-lg"
+              onClick={async () => {
+                try {
+                  if (groupGen.teamIds.length !== 4) throw new Error('Please select exactly 4 teams');
+                  // Persist group code onto teams (optional, for standings page)
+                  await Promise.all(groupGen.teamIds.map(id => api.updateTeam(id, { group: groupGen.group })));
+                  const resp = await api.generateGroupStage(groupGen);
+                  setMsg(`Created ${resp.count} group matches`);
+                  refresh();
+                } catch (e) { setMsg(e.message); }
+              }}
+            >
+              Create 6 Matches
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* NEW: Seed Knockout from Group Standings */}
+      <section className="panel">
+        <h2>Seed Knockout (Semi 1 and Eliminator) from Group</h2>
+        <div className="form-grid-3">
+          <label className="label">Group Code
+            <input value={seedForm.group} onChange={e => setSeedForm(s => ({ ...s, group: e.target.value }))} />
+          </label>
+          <label className="label">Bracket ID
+            <input value={seedForm.bracketId} onChange={e => setSeedForm(s => ({ ...s, bracketId: e.target.value }))} />
+          </label>
+          <label className="label">Semi 1 Date/Time
+            <input type="datetime-local" value={seedForm.scheduledAtSemi1} onChange={e => setSeedForm(s => ({ ...s, scheduledAtSemi1: e.target.value }))} />
+          </label>
+          <label className="label">Eliminator Date/Time
+            <input type="datetime-local" value={seedForm.scheduledAtElim} onChange={e => setSeedForm(s => ({ ...s, scheduledAtElim: e.target.value }))} />
+          </label>
+          <label className="label">War Type
+            <select value={seedForm.warType} onChange={e => setSeedForm(s => ({ ...s, warType: e.target.value }))}>
+              <option value="regular">regular</option>
+              <option value="friendly">friendly</option>
+              <option value="cwl">cwl</option>
+              <option value="esports">esports</option>
+              <option value="legend">legend</option>
+            </select>
+          </label>
+          <label className="label">Size
+            <select value={seedForm.size} onChange={e => setSeedForm(s => ({ ...s, size: Number(e.target.value) }))}>
+              {[5,10,15,20,30,50].map(n => <option key={n} value={n}>{n}v{n}</option>)}
+            </select>
+          </label>
+          <label className="label">Attacks/Member
+            <select value={seedForm.attacksPerMember} onChange={e => setSeedForm(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+            </select>
+          </label>
+
+          <div className="right">
+            <button
+              className="btn-lg"
+              onClick={async () => {
+                try {
+                  const resp = await api.seedKnockoutFromGroup(seedForm);
+                  setMsg(`Seeded ${resp.count} matches for knockout round 1`);
+                  refresh();
+                } catch (e) { setMsg(e.message); }
+              }}
+            >
+              Create Semi 1 + Eliminator
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* NEW: Advance to Semi 2 and Final */}
+      <section className="panel">
+        <h2>Advance Knockout (to Semi 2 and Final)</h2>
+        <div className="form-grid-3">
+          <label className="label">Bracket ID
+            <input value={advanceForm.bracketId} onChange={e => setAdvanceForm(s => ({ ...s, bracketId: e.target.value }))} />
+          </label>
+          <label className="label">Semi 2 Date/Time
+            <input type="datetime-local" value={advanceForm.scheduledAtSemi2} onChange={e => setAdvanceForm(s => ({ ...s, scheduledAtSemi2: e.target.value }))} />
+          </label>
+          <label className="label">Final Date/Time
+            <input type="datetime-local" value={advanceForm.scheduledAtFinal} onChange={e => setAdvanceForm(s => ({ ...s, scheduledAtFinal: e.target.value }))} />
+          </label>
+          <label className="label">War Type
+            <select value={advanceForm.warType} onChange={e => setAdvanceForm(s => ({ ...s, warType: e.target.value }))}>
+              <option value="regular">regular</option>
+              <option value="friendly">friendly</option>
+              <option value="cwl">cwl</option>
+              <option value="esports">esports</option>
+              <option value="legend">legend</option>
+            </select>
+          </label>
+          <label className="label">Size
+            <select value={advanceForm.size} onChange={e => setAdvanceForm(s => ({ ...s, size: Number(e.target.value) }))}>
+              {[5,10,15,20,30,50].map(n => <option key={n} value={n}>{n}v{n}</option>)}
+            </select>
+          </label>
+          <label className="label">Attacks/Member
+            <select value={advanceForm.attacksPerMember} onChange={e => setAdvanceForm(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+            </select>
+          </label>
+
+          <div className="right">
+            <button
+              className="btn-lg"
+              onClick={async () => {
+                try {
+                  const resp = await api.advanceKnockout(advanceForm);
+                  setMsg(`Advanced: Semi2 ${resp.semi2?._id ? 'ok' : '—'} • Final ${resp.final?._id ? 'ok' : '—'}`);
+                  refresh();
+                } catch (e) { setMsg(e.message); }
+              }}
+            >
+              Create Semi 2 + Final
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Update Wars table */}
       <section className="panel">
         <h2>Update Wars</h2>
         <div className="table-wrap">
@@ -355,84 +551,6 @@ export default function Admin() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className="panel">
-        <h2>Generate Bracket (Round 1)</h2>
-        <form onSubmit={e => {
-          e.preventDefault();
-          const ids = bracketGen.teamIds.filter(Boolean);
-          api.generateBracket({
-            bracketId: bracketGen.bracketId,
-            teamIds: ids,
-            scheduledAt: bracketGen.scheduledAt,
-            warType: bracketGen.warType,
-            size: Number(bracketGen.size),
-            attacksPerMember: Number(bracketGen.attacksPerMember),
-            stage: bracketGen.stage
-          }).then(r => { setMsg(`Generated ${r.count} wars`); refresh(); }).catch(e => setMsg(e.message));
-        }} className="form-grid-3">
-          <label className="label">Bracket ID
-            <input value={bracketGen.bracketId} onChange={e => setBracketGen(s => ({ ...s, bracketId: e.target.value }))} />
-          </label>
-          <label className="label">Stage
-            <select value={bracketGen.stage} onChange={e => setBracketGen(s => ({ ...s, stage: e.target.value }))}>
-              <option value="eliminator">eliminator</option>
-              <option value="quarterfinal">quarterfinal</option>
-              <option value="semifinal">semifinal</option>
-              <option value="final">final</option>
-            </select>
-          </label>
-          <label className="label">War Type
-            <select value={bracketGen.warType} onChange={e => setBracketGen(s => ({ ...s, warType: e.target.value }))}>
-              <option value="regular">regular</option>
-              <option value="friendly">friendly</option>
-              <option value="cwl">cwl</option>
-              <option value="esports">esports</option>
-              <option value="legend">legend</option>
-            </select>
-          </label>
-          <label className="label">Size
-            <select value={bracketGen.size} onChange={e => setBracketGen(s => ({ ...s, size: Number(e.target.value) }))}>
-              {[5,10,15,20,30,50].map(n => <option key={n} value={n}>{n}v{n}</option>)}
-            </select>
-          </label>
-          <label className="label">Attacks/Member
-            <select value={bracketGen.attacksPerMember} onChange={e => setBracketGen(s => ({ ...s, attacksPerMember: Number(e.target.value) }))}>
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-            </select>
-          </label>
-          <label className="label col-span-2">Round 1 Date/Time
-            <input type="datetime-local" value={bracketGen.scheduledAt} onChange={e => setBracketGen(s => ({ ...s, scheduledAt: e.target.value }))} required />
-          </label>
-          <div className="col-span-3">
-            <strong>Select Clans (order matters for pairing):</strong>
-            <div className="chips">
-              {teams.map(t => {
-                const selected = bracketGen.teamIds.includes(t._id);
-                return (
-                  <button
-                    type="button"
-                    key={t._id}
-                    className={`chip ${selected ? 'selected' : ''}`}
-                    onClick={() => {
-                      setBracketGen(s => {
-                        const exists = s.teamIds.includes(t._id);
-                        return { ...s, teamIds: exists ? s.teamIds.filter(id => id !== t._id) : [...s.teamIds, t._id] };
-                      });
-                    }}
-                  >
-                    {t.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div className="right">
-            <button type="submit" className="btn-lg">Generate Wars</button>
-          </div>
-        </form>
       </section>
     </div>
   );

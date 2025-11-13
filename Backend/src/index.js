@@ -7,12 +7,14 @@ require('dotenv').config();
 
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+const tournamentRoutes = require('./routes/tournament');
 
 const app = express();
 
+// JSON parsing
 app.use(express.json());
 
-// CORS: explicitly allow the custom admin header and handle preflight
+// CORS: allow custom header x-admin-password and preflight
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || true,
   methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
@@ -20,7 +22,7 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // respond to all preflights
+app.options('*', cors(corsOptions));
 
 app.use(morgan('dev'));
 
@@ -39,11 +41,12 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
-// API Routes
+// Routes
 app.use('/api', publicRoutes);
 app.use('/api', adminRoutes);
+app.use('/api', tournamentRoutes);
 
-// Optional: serve built frontend without vercel.json (set SERVE_FRONTEND=true)
+// Optional static serve of frontend (opt-in)
 if (process.env.SERVE_FRONTEND === 'true') {
   const distPath = path.resolve(__dirname, '../../frontend/dist');
   app.use(express.static(distPath));

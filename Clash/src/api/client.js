@@ -13,7 +13,7 @@ async function request(path, { method = 'GET', body, admin = false } = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
     let errText = await res.text();
@@ -32,21 +32,24 @@ export const api = {
   getGroupStandings: () => request('/group-standings'),
   getBracket: (bracketId = 'main') => request(`/bracket?bracketId=${encodeURIComponent(bracketId)}`),
 
-  // Admin Clans
+  // Admin: Clans
   createTeam: (data) => request('/teams', { method: 'POST', body: data, admin: true }),
   updateTeam: (id, data) => request(`/teams/${id}`, { method: 'PUT', body: data, admin: true }),
   deleteTeam: (id) => request(`/teams/${id}`, { method: 'DELETE', admin: true }),
 
-  // Admin Members
+  // Admin: Members
   addMember: (teamId, data) => request(`/teams/${teamId}/members`, { method: 'POST', body: data, admin: true }),
   updateMember: (teamId, memberId, data) => request(`/teams/${teamId}/members/${memberId}`, { method: 'PUT', body: data, admin: true }),
   deleteMember: (teamId, memberId) => request(`/teams/${teamId}/members/${memberId}`, { method: 'DELETE', admin: true }),
 
-  // Admin Wars
+  // Admin: Matches
   createMatch: (data) => request('/matches', { method: 'POST', body: data, admin: true }),
   updateMatch: (id, data) => request(`/matches/${id}`, { method: 'PUT', body: data, admin: true }),
   deleteMatch: (id) => request(`/matches/${id}`, { method: 'DELETE', admin: true }),
 
-  // Admin Bracket
-  generateBracket: (data) => request('/bracket/generate', { method: 'POST', body: data, admin: true })
+  // Tournament helpers
+  generateGroupStage: (data) => request('/tournament/group/create', { method: 'POST', body: data, admin: true }),
+  getGroupStandingsAdmin: (group) => request(`/tournament/group/standings?group=${encodeURIComponent(group)}`, { admin: true }),
+  seedKnockoutFromGroup: (data) => request('/tournament/knockout/seed', { method: 'POST', body: data, admin: true }),
+  advanceKnockout: (data) => request('/tournament/knockout/advance', { method: 'POST', body: data, admin: true }),
 };
