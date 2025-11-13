@@ -126,7 +126,7 @@ export default function App() {
             <div className="coc-footer-brand">
               <div className="coc-footer-icon">⚔️</div>
               <div className="coc-footer-text">
-                <strong>Clash Championship</strong>
+                <strong>Praksh Memorial Sports Tournament</strong>
                 <span>Tournament Wars</span>
               </div>
             </div>
@@ -139,8 +139,8 @@ export default function App() {
             </div>
             
             <div className="coc-footer-meta">
-              <small>© {new Date().getFullYear()} Clash Championship Tournament</small>
-              <small>Not affiliated with Supercell</small>
+              <small>© {new Date().getFullYear()} Praksh Memorial Sports Tournament</small>
+              <small>Affiliated with IIIT SURAT</small>
             </div>
           </div>
         </div>
