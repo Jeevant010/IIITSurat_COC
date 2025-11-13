@@ -193,10 +193,9 @@ export default function UEFABracket({ rounds, accent = 'gold' }) {
 
   const getRoundTitle = (round, index) => {
     const roundNames = {
-      1: 'ROUND OF 16',
-      2: 'QUARTER-FINALS', 
-      3: 'SEMI-FINALS',
-      4: 'GRAND FINAL'
+      1: 'Semi-FINALS + Elimainator',
+      2: 'SEMI-FINALS',
+      3: 'GRAND FINAL'
     };
     
     if (round.round && roundNames[round.round]) {

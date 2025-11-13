@@ -1,5 +1,6 @@
 import React from 'react';
 import { api } from '../api/client';
+import { localDatetimeToISO } from '../utils/datetime';
 
 export default function Admin() {
   const [password, setPassword] = React.useState(localStorage.getItem('ADMIN_PASSWORD') || '');
@@ -18,7 +19,20 @@ export default function Admin() {
   const [manageTeam, setManageTeam] = React.useState(null);
   const [newMember, setNewMember] = React.useState({ name: '', playerTag: '', email: '', townHall: '', role: '' });
 
-  // Predesign UI state (TBD placeholders)
+  // Group stage generator (if present in your UI)
+  const [groupGen, setGroupGen] = React.useState({
+    group: 'A', bracketId: 'main', teamIds: [], scheduledAt: '', warType: 'regular', size: 15, attacksPerMember: 2
+  });
+
+  // Seed and advance forms (if present)
+  const [seedForm, setSeedForm] = React.useState({
+    group: 'A', bracketId: 'main', scheduledAtSemi1: '', scheduledAtElim: '', warType: 'regular', size: 15, attacksPerMember: 2
+  });
+  const [advanceForm, setAdvanceForm] = React.useState({
+    bracketId: 'main', scheduledAtSemi2: '', scheduledAtFinal: '', warType: 'regular', size: 15, attacksPerMember: 2
+  });
+
+  // Predesign (TBD placeholders), if present
   const [predesign, setPredesign] = React.useState({
     bracketId: 'main',
     status: 'preparation',
@@ -55,7 +69,11 @@ export default function Admin() {
   function handleCreateMatch(e) {
     e.preventDefault();
     const { homeTeam, awayTeam, scheduledAt, stage, warType, size, attacksPerMember, round, bracketId } = formMatch;
-    api.createMatch({ homeTeam, awayTeam, scheduledAt, stage, warType, size: Number(size), attacksPerMember: Number(attacksPerMember), round: Number(round), bracketId })
+    const whenISO = localDatetimeToISO(scheduledAt);
+    api.createMatch({
+      homeTeam, awayTeam, scheduledAt: whenISO, stage, warType,
+      size: Number(size), attacksPerMember: Number(attacksPerMember), round: Number(round), bracketId
+    })
       .then(() => { setMsg('War created'); refresh(); })
       .catch(e => setMsg(e.message));
   }
@@ -64,7 +82,6 @@ export default function Admin() {
     setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), [side]: { ...((s[id] || {})[side]), [field]: value } } }));
   }
   function handleStatusChange(id, value) { setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), status: value } })); }
-  function handleTeamChange(id, which, value) { setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), [which]: value } })); }
 
   function handleUpdateMatch(id) {
     const item = updateResults[id];
@@ -86,6 +103,7 @@ export default function Admin() {
     };
     if (item.homeTeam) payload.homeTeam = item.homeTeam;
     if (item.awayTeam) payload.awayTeam = item.awayTeam;
+    if (item.scheduledAt) payload.scheduledAt = localDatetimeToISO(item.scheduledAt);
 
     api.updateMatch(id, payload).then(() => { setMsg('War updated'); refresh(); }).catch(e => setMsg(e.message));
   }
@@ -130,6 +148,44 @@ export default function Admin() {
   function updateMember(memberId, changes) { if (!manageTeam) return; api.updateMember(manageTeam._id, memberId, changes).then(t => { setManageTeam(t); setMsg('Member updated'); refresh(); }).catch(e => setMsg(e.message)); }
   function deleteMember(memberId) { if (!manageTeam) return; if (!confirm('Delete this member?')) return; api.deleteMember(manageTeam._id, memberId).then(t => { setManageTeam(t); setMsg('Member deleted'); refresh(); }).catch(e => setMsg(e.message)); }
 
+
+  async function createGroupMatches() {
+    if (groupGen.teamIds.length !== 4) throw new Error('Select exactly 4 teams for group stage');
+    // Optional: persist group on teams first (if you use groups)
+    await Promise.all(groupGen.teamIds.map(id => api.updateTeam(id, { group: groupGen.group })));
+    const whenISO = localDatetimeToISO(groupGen.scheduledAt);
+    const payload = { ...groupGen, scheduledAt: whenISO };
+    // If you use the tournament group create endpoint:
+    if (api.generateGroupStage) {
+      await api.generateGroupStage(payload);
+    } else {
+      // fallback: create your own 6 matches here if older code
+    }
+  }
+
+  async function seedKnockout() {
+    const s1 = localDatetimeToISO(seedForm.scheduledAtSemi1);
+    const el = localDatetimeToISO(seedForm.scheduledAtElim);
+    await api.seedKnockoutFromGroup({ ...seedForm, scheduledAtSemi1: s1, scheduledAtElim: el });
+  }
+
+  async function advanceKnockout() {
+    const s2 = localDatetimeToISO(advanceForm.scheduledAtSemi2);
+    const sf = localDatetimeToISO(advanceForm.scheduledAtFinal);
+    await api.advanceKnockout({ ...advanceForm, scheduledAtSemi2: s2, scheduledAtFinal: sf });
+  }
+
+  async function predesignKnockout() {
+    const p = {
+      ...predesign,
+      scheduledAtSemi1: localDatetimeToISO(predesign.scheduledAtSemi1),
+      scheduledAtElim: localDatetimeToISO(predesign.scheduledAtElim),
+      scheduledAtSemi2: localDatetimeToISO(predesign.scheduledAtSemi2),
+      scheduledAtFinal: localDatetimeToISO(predesign.scheduledAtFinal),
+    };
+    await api.predesignKnockout(p);
+  }
+  
   return (
     <div>
       <h1>Admin</h1>
