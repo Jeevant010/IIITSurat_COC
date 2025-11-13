@@ -16,7 +16,6 @@ export default function App() {
           <NavLink to="/teams">Teams</NavLink>
           <NavLink to="/schedule">Schedule</NavLink>
           <NavLink to="/bracket">Bracket</NavLink>
-          <NavLink to="/admin">Admin</NavLink>
         </nav>
       </header>
       <main>

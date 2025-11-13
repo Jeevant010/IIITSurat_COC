@@ -1,5 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api/client';
+import ProgressBar from '../components/ProgressBar.jsx';
 
 export default function Leaderboard() {
   const [rows, setRows] = React.useState([]);
@@ -18,34 +20,69 @@ export default function Leaderboard() {
 
   return (
     <div>
-      <h1>Leaderboard</h1>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th><th>Clan</th><th>P</th><th>W</th><th>D</th><th>L</th>
-              <th>Stars+</th><th>Stars-</th><th>SDiff</th>
-              <th>Avg Dest%</th><th>Pts</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => (
-              <tr key={r.teamId}>
-                <td>{i + 1}</td>
-                <td>{r.name}</td>
-                <td>{r.played}</td>
-                <td>{r.wins}</td>
-                <td>{r.draws}</td>
-                <td>{r.losses}</td>
-                <td>{r.starsFor}</td>
-                <td>{r.starsAgainst}</td>
-                <td>{r.starsDiff}</td>
-                <td>{r.avgDestFor}%</td>
-                <td><strong>{r.points}</strong></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="page-head">
+        <h1>Standings</h1>
+        <div className="sub">Live leaderboard • Win=3 • Draw=1 • Loss=0</div>
+      </div>
+
+      <div className="panel table-panel">
+        <div className="table-legend">
+          <span>P</span><span>W</span><span>D</span><span>L</span>
+          <span>Stars±</span><span>Dest%</span><span>Pts</span>
+        </div>
+        <div className="lb">
+          {rows.map((r, i) => (
+            <div key={r.teamId} className="lb-row">
+              <div className="lb-left">
+                <div className="rank">{i + 1}</div>
+                <Link className="clan" to={`/teams/${r.teamId}`}>{r.name}</Link>
+              </div>
+
+              <div className="lb-mid">
+                <div className="pill stat">{r.played}</div>
+                <div className="pill stat win">{r.wins}</div>
+                <div className="pill stat draw">{r.draws}</div>
+                <div className="pill stat loss">{r.losses}</div>
+
+                <div className="stars">
+                  <span className="plus">{r.starsFor}</span>
+                  <span className="sep">/</span>
+                  <span className="minus">{r.starsAgainst}</span>
+                  <span className="diff">{r.starsDiff >= 0 ? `+${r.starsDiff}` : r.starsDiff}</span>
+                </div>
+
+                <div className="dest">
+                  <ProgressBar
+                    value={r.avgDestFor}
+                    max={100}
+                    color="linear-gradient(90deg, #22c55e, #60a5fa)"
+                    bg="rgba(255,255,255,.08)"
+                    height={10}
+                  />
+                  <div className="dest-label">
+                    <span className="muted">Avg</span> <strong>{r.avgDestFor}%</strong>
+                    <span className="muted dot">•</span>
+                    <span className="muted">Total</span> <strong>{r.destFor.toFixed(2)}%</strong>
+                    <span className="muted dot">•</span>
+                    <span className={r.destDiff >= 0 ? 'good' : 'bad'}>{r.destDiff >= 0 ? '+' : ''}{r.destDiff}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lb-right">
+                <div className="micro">
+                  <div className="muted">Avg⭐</div>
+                  <div className="big">{r.avgStarsFor}</div>
+                </div>
+                <div className="micro">
+                  <div className="muted">Win%</div>
+                  <div className="big">{r.winRate}%</div>
+                </div>
+                <div className="points">{r.points}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
