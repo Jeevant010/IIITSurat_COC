@@ -78,14 +78,48 @@ export default function Admin() {
       .catch(e => setMsg(e.message));
   }
 
+  // Missing functions added here:
   function handleResultChange(id, side, field, value) {
-    setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), [side]: { ...((s[id] || {})[side]), [field]: value } } }));
+    setUpdateResults(s => ({ 
+      ...s, 
+      [id]: { 
+        ...(s[id] || {}), 
+        [side]: { 
+          ...((s[id] || {})[side] || {}), 
+          [field]: value 
+        } 
+      } 
+    }));
   }
-  function handleStatusChange(id, value) { setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), status: value } })); }
+
+  function handleTeamChange(matchId, field, teamId) {
+    setUpdateResults(s => ({ 
+      ...s, 
+      [matchId]: { 
+        ...(s[matchId] || {}), 
+        [field]: teamId 
+      } 
+    }));
+  }
+
+  function handleStatusChange(id, value) { 
+    setUpdateResults(s => ({ ...s, [id]: { ...(s[id] || {}), status: value } })); 
+  }
+
+  function handleScheduledAtChange(id, value) {
+    setUpdateResults(s => ({ 
+      ...s, 
+      [id]: { 
+        ...(s[id] || {}), 
+        scheduledAt: value 
+      } 
+    }));
+  }
 
   function handleUpdateMatch(id) {
     const item = updateResults[id];
     if (!item) return;
+    
     const payload = {
       status: item.status || undefined,
       result: {
@@ -101,11 +135,24 @@ export default function Admin() {
         }
       }
     };
+    
+    // Add team changes to payload
     if (item.homeTeam) payload.homeTeam = item.homeTeam;
     if (item.awayTeam) payload.awayTeam = item.awayTeam;
     if (item.scheduledAt) payload.scheduledAt = localDatetimeToISO(item.scheduledAt);
 
-    api.updateMatch(id, payload).then(() => { setMsg('War updated'); refresh(); }).catch(e => setMsg(e.message));
+    api.updateMatch(id, payload)
+      .then(() => { 
+        setMsg('War updated'); 
+        refresh(); 
+        // Clear the update for this match
+        setUpdateResults(s => {
+          const newState = { ...s };
+          delete newState[id];
+          return newState;
+        });
+      })
+      .catch(e => setMsg(e.message));
   }
 
   function handleDeleteMatch(id) {
@@ -147,7 +194,6 @@ export default function Admin() {
 
   function updateMember(memberId, changes) { if (!manageTeam) return; api.updateMember(manageTeam._id, memberId, changes).then(t => { setManageTeam(t); setMsg('Member updated'); refresh(); }).catch(e => setMsg(e.message)); }
   function deleteMember(memberId) { if (!manageTeam) return; if (!confirm('Delete this member?')) return; api.deleteMember(manageTeam._id, memberId).then(t => { setManageTeam(t); setMsg('Member deleted'); refresh(); }).catch(e => setMsg(e.message)); }
-
 
   async function createGroupMatches() {
     if (groupGen.teamIds.length !== 4) throw new Error('Select exactly 4 teams for group stage');

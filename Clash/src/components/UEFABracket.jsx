@@ -2,16 +2,17 @@ import React from 'react';
 
 // Enhanced UEFA-style match nodes with better visual hierarchy
 function MatchNode({ match, isWinnerTop, isWinnerBottom, roundType }) {
-  const homeTeam = match.homeTeam;
-  const awayTeam = match.awayTeam;
-  const homeScore = match.result?.home?.stars ?? 0;
-  const awayScore = match.result?.away?.stars ?? 0;
-  const homeDestruction = match.result?.home?.destruction ?? 0;
-  const awayDestruction = match.result?.away?.destruction ?? 0;
+  // Add safe data access with defaults
+  const homeTeam = match?.homeTeam || {};
+  const awayTeam = match?.awayTeam || {};
+  const homeScore = match?.result?.home?.stars ?? 0;
+  const awayScore = match?.result?.away?.stars ?? 0;
+  const homeDestruction = match?.result?.home?.destruction ?? 0;
+  const awayDestruction = match?.result?.away?.destruction ?? 0;
   
-  const isCompleted = match.status === 'completed';
-  const isLive = match.status === 'battle';
-  const isScheduled = match.status === 'preparation';
+  const isCompleted = match?.status === 'completed';
+  const isLive = match?.status === 'battle';
+  const isScheduled = match?.status === 'preparation';
 
   // Determine winner based on stars, then destruction percentage
   const getWinner = () => {
@@ -29,7 +30,7 @@ function MatchNode({ match, isWinnerTop, isWinnerBottom, roundType }) {
     <div className={`uefa-match-node ${isCompleted ? 'completed' : ''} ${isLive ? 'live' : ''} ${isFinal ? 'final-match' : ''} ${roundType}`}>
       {/* Enhanced Match Header */}
       <div className="match-header">
-        {isScheduled && match.scheduledAt && (
+        {isScheduled && match?.scheduledAt && (
           <div className="match-time">
             <strong>{new Date(match.scheduledAt).toLocaleDateString()}</strong>
           </div>
@@ -109,10 +110,10 @@ function MatchNode({ match, isWinnerTop, isWinnerBottom, roundType }) {
       {/* Enhanced Match Metadata */}
       <div className="match-meta">
         <div className="match-type">
-          <strong>{match.warType || 'REGULAR'}</strong>
+          <strong>{match?.warType || 'REGULAR'}</strong>
         </div>
         <div className="match-size">
-          <strong>{match.size || 15}v{match.size || 15}</strong>
+          <strong>{match?.size || 15}v{match?.size || 15}</strong>
         </div>
         {isCompleted && (
           <div className="match-status completed">
@@ -138,7 +139,7 @@ function MatchNode({ match, isWinnerTop, isWinnerBottom, roundType }) {
   );
 }
 
-export default function UEFABracket({ rounds, accent = 'gold' }) {
+export default function UEFABracket({ rounds = [], accent = 'gold' }) {
   const refRoot = React.useRef(null);
   const refMap = React.useRef(new Map());
   const [paths, setPaths] = React.useState([]);
@@ -147,7 +148,7 @@ export default function UEFABracket({ rounds, accent = 'gold' }) {
 
   React.useLayoutEffect(() => {
     const root = refRoot.current;
-    if (!root) return;
+    if (!root || !rounds || rounds.length === 0) return;
     
     const updatePaths = () => {
       const bbox = root.getBoundingClientRect();
@@ -157,8 +158,14 @@ export default function UEFABracket({ rounds, accent = 'gold' }) {
         const currentRound = rounds[roundIdx]?.matches || [];
         const nextRound = rounds[roundIdx + 1]?.matches || [];
 
+        // Skip if no matches in current or next round
+        if (!currentRound.length || !nextRound.length) continue;
+
         for (let matchIdx = 0; matchIdx < currentRound.length; matchIdx++) {
           const nextMatchIdx = Math.floor(matchIdx / 2);
+          
+          // Skip if next match doesn't exist
+          if (nextMatchIdx >= nextRound.length) continue;
           
           const fromEl = refMap.current.get(keyOf(roundIdx, matchIdx));
           const toEl = refMap.current.get(keyOf(roundIdx + 1, nextMatchIdx));
@@ -186,19 +193,24 @@ export default function UEFABracket({ rounds, accent = 'gold' }) {
       setPaths(lines);
     };
 
-    updatePaths();
+    // Use setTimeout to ensure DOM is fully rendered
+    const timeoutId = setTimeout(updatePaths, 100);
+    
     window.addEventListener('resize', updatePaths);
-    return () => window.removeEventListener('resize', updatePaths);
+    return () => {
+      window.removeEventListener('resize', updatePaths);
+      clearTimeout(timeoutId);
+    };
   }, [rounds]);
 
   const getRoundTitle = (round, index) => {
     const roundNames = {
-      1: 'Semi-FINALS + Elimainator',
+      1: 'Semi-FINALS + Eliminator',
       2: 'SEMI-FINALS',
       3: 'GRAND FINAL'
     };
     
-    if (round.round && roundNames[round.round]) {
+    if (round?.round && roundNames[round.round]) {
       return roundNames[round.round];
     }
     
@@ -207,13 +219,33 @@ export default function UEFABracket({ rounds, accent = 'gold' }) {
     if (index === totalRounds - 1) return 'GRAND FINAL';
     if (index === totalRounds - 2) return 'SEMI-FINALS';
     if (index === totalRounds - 3) return 'QUARTER-FINALS';
-    return `ROUND ${round.round || index + 1}`;
+    return `ROUND ${round?.round || index + 1}`;
   };
 
   const getRoundSubtitle = (round) => {
-    const matchCount = round.matches?.length || 0;
+    const matchCount = round?.matches?.length || 0;
     return `${matchCount} MATCH${matchCount !== 1 ? 'ES' : ''}`;
   };
+
+  // Add loading state
+  if (!rounds || rounds.length === 0) {
+    return (
+      <div className="uefa-bracket-container loading">
+        <div className="bracket-header">
+          <div className="tournament-title">
+            <span className="trophy-icon">🏆</span>
+            <div className="title-content">
+              <h1>CLASH CHAMPIONSHIP BRACKET</h1>
+              <div className="tournament-subtitle">OFFICIAL TOURNAMENT PROGRESSION</div>
+            </div>
+          </div>
+        </div>
+        <div className="bracket-loading">
+          <strong>Loading bracket data...</strong>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`uefa-bracket-container ${accent}`} ref={refRoot}>
@@ -259,7 +291,7 @@ export default function UEFABracket({ rounds, accent = 'gold' }) {
           {rounds.map((round, roundIndex) => (
             <div 
               className={`bracket-round round-${roundIndex + 1}`} 
-              key={round.round || roundIndex}
+              key={round?._id || round?.round || roundIndex}
             >
               <div className="round-header">
                 <div className="round-title">
@@ -271,9 +303,9 @@ export default function UEFABracket({ rounds, accent = 'gold' }) {
               </div>
               
               <div className="round-matches-container">
-                {round.matches?.map((match, matchIndex) => (
+                {round?.matches?.map((match, matchIndex) => (
                   <div
-                    key={match._id || `${roundIndex}-${matchIndex}`}
+                    key={match?._id || `${roundIndex}-${matchIndex}`}
                     ref={(el) => el && refMap.current.set(keyOf(roundIndex, matchIndex), el)}
                     className="match-container"
                   >
