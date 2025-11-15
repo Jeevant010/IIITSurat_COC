@@ -20,7 +20,7 @@ export default function App() {
             <div className="coc-brand-icon">⚔️</div>
             <div className="coc-brand-text">
               <span className="coc-brand-title">Clash Championship</span>
-              <span className="coc-brand-subtitle">Praksh Memorial Sports Tournament</span>
+              <span className="coc-brand-subtitle">Prakash Memorial Sports Tournament</span>
             </div>
           </Link>
 
@@ -126,7 +126,7 @@ export default function App() {
             <div className="coc-footer-brand">
               <div className="coc-footer-icon">⚔️</div>
               <div className="coc-footer-text">
-                <strong>Praksh Memorial Sports Tournament</strong>
+                <strong>Prakash Memorial Sports Tournament</strong>
                 <span>Clash Of Clans Tournament</span>
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function App() {
             </div>
             
             <div className="coc-footer-meta">
-              <small>© {new Date().getFullYear()} Praksh Memorial Sports Tournament</small>
+              <small>© {new Date().getFullYear()} Prakash Memorial Sports Tournament</small>
               <small>Affiliated with IIIT SURAT</small>
             </div>
           </div>
